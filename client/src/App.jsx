@@ -1,122 +1,132 @@
-import React, { useState } from 'react';
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
-import BottomSummary from './components/layout/BottomSummary';
-import AntarcticMap from './components/map/AntarcticMap';
-import LocationInfoPanel from './components/panels/LocationInfoPanel';
-import { useNavigationState } from './hooks/useNavigationState';
-import { Compass } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import HomePage from './components/home/HomePage';
+import MapPage from './pages/MapPage';
+import ModulePage from './pages/ModulePage';
 
-export default function App() {
-  const {
-    layers,
-    toggleLayer,
-    baseLayer,
-    setBaseLayer,
-    vessel,
-    icebergs,
-    routes,
-    riskZones,
-    stations,
-    loading,
-    selectedObject,
-    setSelectedObject,
-    selectVessel,
-    selectIceberg,
-    selectStation,
-    selectRoute,
-    selectCustomCoordinate,
-    mapCenter,
-    mapZoom,
-    focusVessel,
-    resetAntarcticOverview
-  } = useNavigationState();
+/* Page transition variants */
+const pageVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit:    { opacity: 0 },
+};
 
-  // Active route mode for bottom summary ('recommended' | 'alternative')
-  const [activeRouteType, setActiveRouteType] = useState('recommended');
+const pageTransition = { duration: 0.5, ease: [0.16, 1, 0.3, 1] };
 
-  const handleSelectRoute = (route) => {
-    selectRoute(route);
-    setActiveRouteType(route.isRecommended ? 'recommended' : 'alternative');
-  };
+/* Sets html class for map route (enables overflow:hidden) */
+function MapViewManager() {
+  const location = useLocation();
+  useEffect(() => {
+    if (location.pathname === '/map') {
+      document.documentElement.classList.add('map-view');
+    } else {
+      document.documentElement.classList.remove('map-view');
+    }
+  }, [location.pathname]);
+  return null;
+}
 
-  if (loading) {
-    return (
-      <div className="h-screen w-screen bg-[#060a12] flex flex-col items-center justify-center text-slate-100 font-mono select-none">
-        <div className="relative flex items-center justify-center mb-4">
-          <div className="w-16 h-16 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin" />
-          <Compass className="w-8 h-8 text-cyan-400 absolute" />
-        </div>
-        <div className="text-sm font-bold font-display text-white tracking-wider flex items-center gap-2">
-          POLARNAV <span className="text-cyan-400 text-xs px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-500/30">AI</span>
-        </div>
-        <p className="text-xs text-slate-400 mt-1 animate-pulse">
-          INITIALIZING ANTARCTIC NAVIGATION MATRIX...
-        </p>
-        <p className="text-[10px] text-slate-400 mt-4">
-          Ministry of Earth Sciences (MoES) / NCPOR • SIH 2026
-        </p>
-      </div>
-    );
-  }
+function AnimatedRoutes() {
+  const location = useLocation();
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#060a12] text-slate-100 font-sans overflow-hidden select-none">
-      {/* 1. TOP HEADER */}
-      <Header
-        onFocusVessel={focusVessel}
-        onResetOverview={resetAntarcticOverview}
-      />
+    <>
+      <MapViewManager />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
 
-      {/* 2. MAIN CENTER BODY (Left Sidebar + Center Map + Right Telemetry Panel) */}
-      <div className="flex-1 flex min-h-0 relative">
-        {/* Left Layer Controls & Station Quick Jump */}
-        <Sidebar
-          layers={layers}
-          onToggleLayer={toggleLayer}
-          stations={stations}
-          onSelectStation={selectStation}
-          selectedObjectId={selectedObject?.data?.id}
-        />
-
-        {/* Primary Interactive Antarctic Map */}
-        <main className="flex-1 h-full relative">
-          <AntarcticMap
-            layers={layers}
-            baseLayer={baseLayer}
-            setBaseLayer={setBaseLayer}
-            vessel={vessel}
-            icebergs={icebergs}
-            routes={routes}
-            riskZones={riskZones}
-            stations={stations}
-            selectedObject={selectedObject}
-            onSelectVessel={selectVessel}
-            onSelectIceberg={selectIceberg}
-            onSelectStation={selectStation}
-            onSelectRoute={handleSelectRoute}
-            onSelectCoordinate={selectCustomCoordinate}
-            mapCenter={mapCenter}
-            mapZoom={mapZoom}
-            onFocusVessel={focusVessel}
-            onResetOverview={resetAntarcticOverview}
+          {/* 1. Cinematic Homepage */}
+          <Route
+            path="/"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+              >
+                <HomePage />
+              </motion.div>
+            }
           />
-        </main>
 
-        {/* Right Dynamic Telemetry & Object Info Panel */}
-        <LocationInfoPanel
-          selectedObject={selectedObject}
-          onClose={() => setSelectedObject(null)}
-        />
-      </div>
+          {/* 2. Antarctic GIS Map Dashboard */}
+          <Route
+            path="/map"
+            element={
+              <motion.div
+                className="w-screen h-screen"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+              >
+                <MapPage />
+              </motion.div>
+            }
+          />
 
-      {/* 3. BOTTOM NAVIGATION & ROUTE SUMMARY */}
-      <BottomSummary
-        vessel={vessel}
-        routes={routes}
-        selectedRouteType={activeRouteType}
-        onSelectRoute={handleSelectRoute}
-      />
-    </div>
+          {/* 3. Module pages */}
+          <Route
+            path="/sea-ice"
+            element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <ModulePage type="sea-ice" />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/icebergs"
+            element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <ModulePage type="icebergs" />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/routes"
+            element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <ModulePage type="routes" />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/ocean"
+            element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <ModulePage type="ocean" />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/weather"
+            element={<Navigate to="/ocean" replace />}
+          />
+          <Route
+            path="/mission"
+            element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <ModulePage type="mission" />
+              </motion.div>
+            }
+          />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AnimatedRoutes />
+    </BrowserRouter>
   );
 }

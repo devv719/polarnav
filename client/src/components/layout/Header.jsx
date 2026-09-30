@@ -4,8 +4,10 @@ import {
   Ship, 
   Globe2, 
   Activity,
-  Clock
+  Clock,
+  LayoutGrid
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useUtcClock } from '../../hooks/useUtcClock';
 
 export default function Header({ 
@@ -18,15 +20,21 @@ export default function Header({
     <header className="h-14 bg-[#090e1a] border-b border-slate-800/80 px-4 flex items-center justify-between z-30 shrink-0 select-none shadow-md">
       {/* Brand & Project Identity */}
       <div className="flex items-center gap-3.5">
-        <div className="flex items-center justify-center w-9 h-9 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
-          <Compass className="w-5 h-5 animate-spin-slow" />
-        </div>
+        <Link 
+          to="/system"
+          title="Return to System Modules"
+          className="flex items-center justify-center w-9 h-9 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-900/60 hover:border-cyan-400 transition-colors shadow-[0_0_12px_rgba(0,229,255,0.2)] group"
+        >
+          <Compass className="w-5 h-5 animate-spin-slow group-hover:scale-110 transition-transform" />
+        </Link>
         
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold tracking-wider text-white font-display flex items-center gap-1.5">
-              POLARNAV <span className="text-cyan-400 font-extrabold text-xs px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30">AI</span>
-            </h1>
+            <Link to="/system" className="hover:opacity-90">
+              <h1 className="text-base font-bold tracking-wider text-white font-display flex items-center gap-1.5">
+                POLARNAV <span className="text-cyan-400 font-extrabold text-xs px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30">AI</span>
+              </h1>
+            </Link>
             <span className="hidden sm:inline-block text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700">
               SIH-26059
             </span>
@@ -65,6 +73,15 @@ export default function Header({
       <div className="flex items-center gap-3">
         {/* Quick Nav Tools */}
         <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded p-0.5">
+          <Link
+            to="/system"
+            title="System Modules"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 rounded transition-colors"
+          >
+            <LayoutGrid className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden xl:inline">Modules</span>
+          </Link>
+
           <button
             onClick={onFocusVessel}
             title="Center on Research Vessel"

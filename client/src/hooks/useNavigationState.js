@@ -118,9 +118,11 @@ export function useNavigationState() {
     }
   }, [vessel, selectVessel]);
 
-  const resetAntarcticOverview = useCallback(() => {
-    setMapCenter([-75.0, 45.0]);
-    setMapZoom(3);
+  const zoomTo = useCallback((coordinates, zoom = 7) => {
+    if (coordinates && coordinates.length === 2) {
+      setMapCenter(coordinates);
+      setMapZoom(zoom);
+    }
   }, []);
 
   return {
@@ -146,6 +148,7 @@ export function useNavigationState() {
     setMapCenter,
     setMapZoom,
     focusVessel,
-    resetAntarcticOverview
+    resetAntarcticOverview,
+    zoomTo
   };
 }

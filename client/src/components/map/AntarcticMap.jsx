@@ -9,6 +9,7 @@ import StationMarker from './StationMarker';
 import MapLegend from './MapLegend';
 import MapControls from './MapControls';
 import FloatingLayersControl from '../controls/FloatingLayersControl';
+import StationSearchFilter from '../controls/StationSearchFilter';
 import { ANTARCTIC_BASE_VIEW } from '../../data/antarcticDemoData';
 
 function MapViewController({ center, zoom }) {
@@ -37,11 +38,21 @@ export default function AntarcticMap({
   layers,
   onToggleLayer,
   baseLayer = 'satellite',
+  setBaseLayer,
   vessel,
   icebergs,
   routes,
   riskZones,
-  stations,
+  stations = [],
+  filteredStations = [],
+  searchQuery = '',
+  setSearchQuery,
+  selectedCountry = 'All',
+  setSelectedCountry,
+  selectedSeasonality = 'All',
+  setSelectedSeasonality,
+  selectedType = 'All',
+  setSelectedType,
   selectedObject,
   onSelectVessel,
   onSelectIceberg,
@@ -50,17 +61,38 @@ export default function AntarcticMap({
   onSelectCoordinate,
   mapCenter = ANTARCTIC_BASE_VIEW.center,
   mapZoom = ANTARCTIC_BASE_VIEW.zoom,
-  onResetOverview
+  onResetOverview,
+  stats
 }) {
   return (
     <div className="relative w-full h-full bg-[#071018] overflow-hidden">
-      {/* 1. Floating Left Layers Control */}
+      {/* 1. Floating Left Layers Control with Basemaps */}
       <FloatingLayersControl
         layers={layers}
         onToggleLayer={onToggleLayer}
+        baseLayer={baseLayer}
+        setBaseLayer={setBaseLayer}
       />
 
-      {/* 2. Interactive Map Container */}
+      {/* 2. Compact Station Search & Dynamic Filters */}
+      {layers.stations && (
+        <StationSearchFilter
+          stations={stations}
+          filteredStations={filteredStations}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCountry={selectedCountry}
+          setSelectedCountry={setSelectedCountry}
+          selectedSeasonality={selectedSeasonality}
+          setSelectedSeasonality={setSelectedSeasonality}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          onSelectStation={onSelectStation}
+          stats={stats}
+        />
+      )}
+
+      {/* 3. Interactive Map Container */}
       <MapContainer
         center={mapCenter}
         zoom={mapZoom}
@@ -73,17 +105,17 @@ export default function AntarcticMap({
         <MapViewController center={mapCenter} zoom={mapZoom} />
         <MapEventHandler onMapClick={onSelectCoordinate} />
 
-        {/* Satellite / Dark Basemap */}
+        {/* Satellite / Ocean / Topo Basemap */}
         <MapBaseLayer mapType={baseLayer} />
 
-        {/* Subtle Sea Ice & Hazard Layer */}
+        {/* Subtle Sea Ice & Risk Hazard Layer */}
         <RiskZoneLayer
           riskZones={riskZones}
           showZones={layers.seaIceConcentration || layers.riskZones}
           onSelectZone={onSelectCoordinate}
         />
 
-        {/* Clean Routes */}
+        {/* Clean Navigation Routes */}
         <RouteLayer
           routes={routes}
           showRecommended={layers.recommendedRoute}
@@ -92,8 +124,8 @@ export default function AntarcticMap({
           onSelectRoute={onSelectRoute}
         />
 
-        {/* Polar Bases */}
-        {layers.stations && stations?.map((station) => (
+        {/* Antarctic Research Bases & Facilities (from COMNAP CSV) */}
+        {layers.stations && filteredStations?.map((station) => (
           <StationMarker
             key={station.id}
             station={station}
@@ -112,7 +144,7 @@ export default function AntarcticMap({
           />
         ))}
 
-        {/* Research Vessel */}
+        {/* Research Vessel (ORV Sagar Nidhi) */}
         {layers.vessel && vessel && (
           <VesselMarker
             vessel={vessel}

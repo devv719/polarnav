@@ -1,8 +1,14 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ExternalLink, Crosshair, Navigation } from 'lucide-react';
 import { formatCoordinates } from '../../utils/formatters';
 
-export default function LocationInfoPanel({ selectedObject, onClose }) {
+export default function LocationInfoPanel({
+  selectedObject,
+  onClose,
+  onZoomTo,
+  onSetDestination
+}) {
   if (!selectedObject) return null;
 
   const { type, data } = selectedObject;
@@ -14,25 +20,25 @@ export default function LocationInfoPanel({ selectedObject, onClose }) {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="absolute top-0 right-0 bottom-0 z-[1001] w-80 max-w-[320px] bg-[#0B1520]/95 backdrop-blur-md border-l border-white/[0.08] p-6 flex flex-col justify-between select-none font-sans shadow-2xl"
+        className="absolute top-0 right-0 bottom-0 z-[1001] w-80 max-w-[320px] bg-[#0B1520]/95 backdrop-blur-md border-l border-white/[0.08] p-6 flex flex-col justify-between select-none font-sans shadow-2xl overflow-y-auto"
       >
         <div className="space-y-6">
           {/* Header Tag + Close Icon */}
           <div className="flex items-center justify-between">
             <span className="text-[10px] tracking-[0.25em] uppercase font-mono text-[#82909B]">
-              {type === 'vessel'
+              {type === 'station'
+                ? 'ANTARCTIC FACILITY'
+                : type === 'vessel'
                 ? 'RESEARCH VESSEL'
                 : type === 'iceberg'
                 ? 'ICE HAZARD'
                 : type === 'route'
                 ? 'NAVIGATION ROUTE'
-                : type === 'station'
-                ? 'POLAR STATION'
                 : 'COORDINATE'}
             </span>
             <button
               onClick={onClose}
-              className="text-xs text-[#82909B] hover:text-[#F2F4F5] transition-colors p-1"
+              className="text-xs text-[#82909B] hover:text-[#F2F4F5] transition-colors p-1 leading-none"
               title="Close Panel"
             >
               ✕
@@ -41,7 +47,158 @@ export default function LocationInfoPanel({ selectedObject, onClose }) {
 
           <div className="h-[1px] bg-white/[0.08]" />
 
-          {/* Type-Specific Content */}
+          {/* 1. STATION / FACILITY INTELLIGENCE */}
+          {type === 'station' && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-xl font-bold font-display text-[#F2F4F5] tracking-tight">
+                  {data.name}
+                </h2>
+                {data.officialName && data.officialName !== data.name && (
+                  <p className="text-xs text-[#82909B] mt-0.5 font-sans italic">
+                    {data.officialName}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs font-mono text-[#38bdf8] uppercase tracking-wider font-semibold">
+                    {data.country || data.operatorPrimary}
+                  </span>
+                  <span className="text-white/20">•</span>
+                  <span className="text-xs font-mono text-[#82909B]">
+                    {data.type || 'Station'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status & Seasonality Badges */}
+              <div className="flex items-center gap-2 font-mono text-[10px]">
+                {data.seasonality && (
+                  <span className="px-2 py-0.5 rounded-sm bg-[#38bdf8]/10 text-[#38bdf8] border border-[#38bdf8]/30 uppercase">
+                    {data.seasonality}
+                  </span>
+                )}
+                {data.status && (
+                  <span
+                    className={`px-2 py-0.5 rounded-sm border uppercase ${
+                      data.status.toLowerCase().includes('open')
+                        ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30'
+                        : 'bg-amber-950/40 text-amber-300 border-amber-500/30'
+                    }`}
+                  >
+                    {data.status}
+                  </span>
+                )}
+              </div>
+
+              {/* Coordinates */}
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-[#82909B] font-mono">
+                  Location
+                </div>
+                <div className="text-sm font-mono text-[#F2F4F5] mt-1 space-y-0.5">
+                  <div>
+                    {formatCoordinates(data.coordinates?.[0] || data.latitude, data.coordinates?.[1] || data.longitude)}
+                  </div>
+                  {(data.latitudeDDM || data.longitudeDDM) && (
+                    <div className="text-[10px] text-[#82909B]">
+                      {data.latitudeDDM} {data.longitudeDDM}
+                    </div>
+                  )}
+                  {data.region && (
+                    <div className="text-[10px] text-[#38bdf8]">
+                      Region: {data.region}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Technical Specifications */}
+              <div className="grid grid-cols-2 gap-3 font-mono text-xs pt-1 border-t border-white/[0.06]">
+                {data.elevation !== null && data.elevation !== undefined && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest text-[#82909B]">Elevation</div>
+                    <div className="text-xs font-medium text-[#F2F4F5] mt-0.5">
+                      {data.elevation} m {data.elevationDatum ? `(${data.elevationDatum})` : ''}
+                    </div>
+                  </div>
+                )}
+                {data.peakPopulation !== null && data.peakPopulation !== undefined && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest text-[#82909B]">Peak Population</div>
+                    <div className="text-xs font-medium text-[#F2F4F5] mt-0.5">
+                      {data.peakPopulation} persons
+                    </div>
+                  </div>
+                )}
+                {data.yearEstablished && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest text-[#82909B]">Established</div>
+                    <div className="text-xs font-medium text-[#F2F4F5] mt-0.5">
+                      {data.yearEstablished}
+                    </div>
+                  </div>
+                )}
+                {data.powerSupply && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest text-[#82909B]">Power Supply</div>
+                    <div className="text-xs font-medium text-[#F2F4F5] mt-0.5 truncate" title={data.powerSupply}>
+                      {data.powerSupply}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Photo / Webcam External Links if present */}
+              {(data.photoUrl || data.webcamUrl) && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {data.photoUrl && (
+                    <a
+                      href={data.photoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[10px] font-mono text-[#38bdf8] hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Photo Source
+                    </a>
+                  )}
+                  {data.webcamUrl && (
+                    <a
+                      href={data.webcamUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-400 hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Live Webcam
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Actions: Zoom to Station */}
+              <div className="pt-2 space-y-2">
+                {onZoomTo && (
+                  <button
+                    onClick={() => onZoomTo(data.coordinates || [data.latitude, data.longitude])}
+                    className="w-full flex items-center justify-center gap-2 py-1.5 bg-[#122234] hover:bg-[#182e46] text-[#38bdf8] border border-[#38bdf8]/30 rounded-sm text-xs font-mono uppercase tracking-wider transition-colors"
+                  >
+                    <Crosshair className="w-3.5 h-3.5" />
+                    Zoom To Facility
+                  </button>
+                )}
+                {onSetDestination && (
+                  <button
+                    onClick={() => onSetDestination(data)}
+                    className="w-full flex items-center justify-center gap-2 py-1.5 bg-transparent hover:bg-white/5 text-[#82909B] hover:text-[#F2F4F5] border border-white/10 rounded-sm text-[11px] font-mono uppercase tracking-wider transition-colors"
+                  >
+                    <Navigation className="w-3 h-3 text-[#38bdf8]" />
+                    Set Nav Target
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 2. VESSEL */}
           {type === 'vessel' && (
             <div className="space-y-5">
               <div>
@@ -73,6 +230,7 @@ export default function LocationInfoPanel({ selectedObject, onClose }) {
             </div>
           )}
 
+          {/* 3. ICEBERG */}
           {type === 'iceberg' && (
             <div className="space-y-5">
               <div>
@@ -122,6 +280,7 @@ export default function LocationInfoPanel({ selectedObject, onClose }) {
             </div>
           )}
 
+          {/* 4. ROUTE */}
           {type === 'route' && (
             <div className="space-y-5">
               <div>
@@ -166,37 +325,7 @@ export default function LocationInfoPanel({ selectedObject, onClose }) {
             </div>
           )}
 
-          {type === 'station' && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-xl font-bold font-display text-[#F2F4F5] tracking-tight">
-                  {data.name}
-                </h2>
-                <p className="text-xs text-[#82909B] mt-1 font-mono">
-                  {data.operator}
-                </p>
-              </div>
-
-              <div className="space-y-1 font-mono text-sm text-[#F2F4F5]">
-                <div>{formatCoordinates(data.coordinates?.[0], data.coordinates?.[1])}</div>
-                <div className="text-xs text-[#38bdf8]">
-                  Sector: {data.sector || 'Prydz Bay'}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 font-mono">
-                <div>
-                  <div className="text-[10px] uppercase tracking-widest text-[#82909B]">Temperature</div>
-                  <div className="text-sm font-medium text-[#F2F4F5] mt-0.5">{data.currentTemp}°C</div>
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-widest text-[#82909B]">Wind</div>
-                  <div className="text-sm font-medium text-[#F2F4F5] mt-0.5">{data.windSpeed} kts</div>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* 5. COORDINATE PROBE */}
           {type === 'coordinate' && (
             <div className="space-y-5">
               <div>

@@ -53,11 +53,8 @@ export function useNavigationState() {
         setRiskZones(zoneData);
         setStations(stationData);
 
-        // Default selection: active vessel
-        setSelectedObject({
-          type: 'vessel',
-          data: vesselData
-        });
+        // Default selection: none (panel only opens on user selection)
+        setSelectedObject(null);
       } catch (err) {
         console.error('Error loading PolarNav data:', err);
       } finally {

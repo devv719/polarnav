@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, useMap, useMapEvents } from 'react-leaflet';
 import MapBaseLayer from './MapBaseLayer';
 import VesselMarker from './VesselMarker';
@@ -8,12 +8,9 @@ import RiskZoneLayer from './RiskZoneLayer';
 import StationMarker from './StationMarker';
 import MapLegend from './MapLegend';
 import MapControls from './MapControls';
-import { formatCoordinates } from '../../utils/formatters';
+import FloatingLayersControl from '../controls/FloatingLayersControl';
 import { ANTARCTIC_BASE_VIEW } from '../../data/antarcticDemoData';
 
-/**
- * Controller component to handle smooth animated camera movements
- */
 function MapViewController({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
@@ -27,16 +24,10 @@ function MapViewController({ center, zoom }) {
   return null;
 }
 
-/**
- * Capture map clicks to probe geographic points and track cursor coordinates
- */
-function MapEventHandler({ onMapClick, onMouseMove }) {
+function MapEventHandler({ onMapClick }) {
   useMapEvents({
     click(e) {
       if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-    mousemove(e) {
-      if (onMouseMove) onMouseMove(e.latlng.lat, e.latlng.lng);
     }
   });
   return null;
@@ -44,8 +35,8 @@ function MapEventHandler({ onMapClick, onMouseMove }) {
 
 export default function AntarcticMap({
   layers,
+  onToggleLayer,
   baseLayer = 'satellite',
-  setBaseLayer,
   vessel,
   icebergs,
   routes,
@@ -61,46 +52,38 @@ export default function AntarcticMap({
   mapZoom = ANTARCTIC_BASE_VIEW.zoom,
   onResetOverview
 }) {
-  const [cursorCoord, setCursorCoord] = useState('');
-
-  const handleMouseMove = (lat, lng) => {
-    setCursorCoord(formatCoordinates(lat, lng));
-  };
-
-  const handleResetAntarctica = () => {
-    if (onResetOverview) {
-      onResetOverview();
-    }
-  };
-
   return (
-    <div className="relative w-full h-full bg-[#020610] overflow-hidden">
+    <div className="relative w-full h-full bg-[#071018] overflow-hidden">
+      {/* 1. Floating Left Layers Control */}
+      <FloatingLayersControl
+        layers={layers}
+        onToggleLayer={onToggleLayer}
+      />
+
+      {/* 2. Interactive Map Container */}
       <MapContainer
         center={mapCenter}
         zoom={mapZoom}
         minZoom={2}
         maxZoom={15}
         scrollWheelZoom={true}
-        zoomControl={false} // We have custom MapControls with MapTiler styling
+        zoomControl={false}
         className="w-full h-full"
       >
         <MapViewController center={mapCenter} zoom={mapZoom} />
-        <MapEventHandler
-          onMapClick={onSelectCoordinate}
-          onMouseMove={handleMouseMove}
-        />
+        <MapEventHandler onMapClick={onSelectCoordinate} />
 
-        {/* 1. MapTiler Satellite / Geographic Basemap */}
+        {/* Satellite / Dark Basemap */}
         <MapBaseLayer mapType={baseLayer} />
 
-        {/* 2. Geospatial Risk & Pack Ice Polygons */}
+        {/* Subtle Sea Ice & Hazard Layer */}
         <RiskZoneLayer
           riskZones={riskZones}
-          showZones={layers.riskZones}
+          showZones={layers.seaIceConcentration || layers.riskZones}
           onSelectZone={onSelectCoordinate}
         />
 
-        {/* 3. Recommended & Alternative Navigation Routes */}
+        {/* Clean Routes */}
         <RouteLayer
           routes={routes}
           showRecommended={layers.recommendedRoute}
@@ -109,7 +92,7 @@ export default function AntarcticMap({
           onSelectRoute={onSelectRoute}
         />
 
-        {/* 4. Antarctic Research Bases */}
+        {/* Polar Bases */}
         {layers.stations && stations?.map((station) => (
           <StationMarker
             key={station.id}
@@ -119,7 +102,7 @@ export default function AntarcticMap({
           />
         ))}
 
-        {/* 5. Tracked Icebergs */}
+        {/* Iceberg Diamond Markers */}
         {layers.icebergs && icebergs?.map((iceberg) => (
           <IcebergMarker
             key={iceberg.id}
@@ -129,7 +112,7 @@ export default function AntarcticMap({
           />
         ))}
 
-        {/* 6. Active Research Vessel (ORV Sagar Nidhi) */}
+        {/* Research Vessel */}
         {layers.vessel && vessel && (
           <VesselMarker
             vessel={vessel}
@@ -138,16 +121,11 @@ export default function AntarcticMap({
           />
         )}
 
-        {/* Floating In-Map Telemetry & Zoom/Reset Controls */}
-        <MapControls
-          baseLayer={baseLayer}
-          setBaseLayer={setBaseLayer}
-          onResetAntarctica={handleResetAntarctica}
-          cursorCoord={cursorCoord}
-        />
+        {/* Minimal Zoom & Overview Controls */}
+        <MapControls onResetAntarctica={onResetOverview} />
       </MapContainer>
 
-      {/* Symbology Legend */}
+      {/* Unobtrusive Sea Ice Legend */}
       <MapLegend />
     </div>
   );

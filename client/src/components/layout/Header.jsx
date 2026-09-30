@@ -1,117 +1,73 @@
 import React from 'react';
-import { 
-  Compass, 
-  Ship, 
-  Globe2, 
-  Activity,
-  Clock,
-  LayoutGrid
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useUtcClock } from '../../hooks/useUtcClock';
 
-export default function Header({ 
-  onFocusVessel, 
-  onResetOverview
-}) {
-  const { utcIso, utcDate, missionDay } = useUtcClock();
+export default function Header() {
+  const { utcIso } = useUtcClock();
+  const location = useLocation();
+
+  // Extract just HH:MM from UTC (e.g. UTC 19:44)
+  const utcDisplay = utcIso ? `UTC ${utcIso.slice(0, 5)}` : 'UTC 00:00';
+
+  const navLinks = [
+    { label: 'MAP', path: '/map' },
+    { label: 'SEA ICE', path: '/sea-ice' },
+    { label: 'ICEBERGS', path: '/icebergs' },
+    { label: 'ROUTES', path: '/routes' },
+    { label: 'WEATHER', path: '/ocean' },
+  ];
 
   return (
-    <header className="h-14 bg-[#090e1a] border-b border-slate-800/80 px-4 flex items-center justify-between z-30 shrink-0 select-none shadow-md">
-      {/* Brand & Project Identity */}
-      <div className="flex items-center gap-3.5">
-        <Link 
-          to="/system"
-          title="Return to System Modules"
-          className="flex items-center justify-center w-9 h-9 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-900/60 hover:border-cyan-400 transition-colors shadow-[0_0_12px_rgba(0,229,255,0.2)] group"
-        >
-          <Compass className="w-5 h-5 animate-spin-slow group-hover:scale-110 transition-transform" />
-        </Link>
-        
-        <div>
-          <div className="flex items-center gap-2">
-            <Link to="/system" className="hover:opacity-90">
-              <h1 className="text-base font-bold tracking-wider text-white font-display flex items-center gap-1.5">
-                POLARNAV <span className="text-cyan-400 font-extrabold text-xs px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30">AI</span>
-              </h1>
-            </Link>
-            <span className="hidden sm:inline-block text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700">
-              SIH-26059
-            </span>
-            <span className="hidden md:inline-block text-[10px] uppercase font-medium tracking-wide text-cyan-300/80">
-              MoES / NCPOR
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 font-mono tracking-tight hidden sm:block">
-            Antarctic Sea-Ice & Iceberg Trajectory Decision Support
-          </p>
-        </div>
-      </div>
-
-      {/* Center Operational Status HUD */}
-      <div className="hidden lg:flex items-center gap-4 px-3 py-1 rounded bg-[#060a12]/80 border border-slate-800/80 text-xs font-mono">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+    <header className="h-[60px] bg-[#071018] border-b border-white/[0.07] px-6 flex items-center justify-between z-30 shrink-0 select-none">
+      {/* Left: Brand + Subtitle */}
+      <div className="flex items-center gap-6">
+        <Link to="/" className="group flex items-baseline gap-2">
+          <span className="text-sm font-semibold tracking-[0.2em] text-[#F2F4F5] font-display">
+            POLARNAV
           </span>
-          <span className="text-emerald-400 font-semibold text-[11px]">SYSTEM OPERATIONAL</span>
-        </div>
-        <div className="w-[1px] h-3.5 bg-slate-800" />
-        <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-          <Activity className="w-3.5 h-3.5 text-cyan-400" />
-          <span>SIMULATION MODE</span>
-        </div>
-        <div className="w-[1px] h-3.5 bg-slate-800" />
-        <div className="flex items-center gap-1.5 text-slate-300 text-[11px]">
-          <span className="text-slate-500">MISSION:</span>
-          <span className="text-cyan-300">{missionDay}</span>
-        </div>
+          <span className="text-[10px] tracking-wider text-[#38bdf8] font-mono font-medium">
+            AI
+          </span>
+        </Link>
+        <span className="hidden md:inline-block w-[1px] h-3.5 bg-white/10" />
+        <span className="hidden md:inline-block text-[10px] tracking-[0.18em] uppercase text-[#82909B] font-mono font-light">
+          ANTARCTIC NAVIGATION INTELLIGENCE
+        </span>
       </div>
 
-      {/* Right Telemetry & Time Controls */}
-      <div className="flex items-center gap-3">
-        {/* Quick Nav Tools */}
-        <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded p-0.5">
-          <Link
-            to="/system"
-            title="System Modules"
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 rounded transition-colors"
-          >
-            <LayoutGrid className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xl:inline">Modules</span>
-          </Link>
+      {/* Center: Clean Text Navigation */}
+      <nav className="hidden sm:flex items-center gap-8">
+        {navLinks.map((link) => {
+          const isActive = location.pathname === link.path;
+          return (
+            <Link
+              key={link.label}
+              to={link.path}
+              className={`relative py-1 text-[11px] tracking-[0.18em] uppercase font-mono transition-colors duration-200 ${
+                isActive
+                  ? 'text-[#F2F4F5] font-medium'
+                  : 'text-[#82909B] hover:text-[#F2F4F5]'
+              }`}
+            >
+              {link.label}
+              {isActive && (
+                <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-[#38bdf8]" />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
 
-          <button
-            onClick={onFocusVessel}
-            title="Center on Research Vessel"
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-cyan-300 hover:text-white hover:bg-cyan-950/70 rounded transition-colors"
-          >
-            <Ship className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xl:inline">Vessel Focus</span>
-          </button>
-          
-          <button
-            onClick={onResetOverview}
-            title="Antarctic Polar Overview"
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition-colors"
-          >
-            <Globe2 className="w-3.5 h-3.5 text-slate-400" />
-            <span className="hidden xl:inline">Polar Overview</span>
-          </button>
-        </div>
-
-        {/* Live UTC Clock */}
-        <div className="flex items-center gap-2 bg-[#060a12] border border-slate-800 rounded px-2.5 py-1 font-mono text-right">
-          <Clock className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <div className="leading-tight">
-            <div className="text-[11px] font-semibold text-slate-100 tracking-wider">
-              {utcIso}
-            </div>
-            <div className="text-[9px] text-slate-400 hidden sm:block">
-              {utcDate}
-            </div>
-          </div>
+      {/* Right: Live UTC + Single Clean Status Dot */}
+      <div className="flex items-center gap-4 text-right font-mono">
+        <span className="text-xs tracking-wider text-[#F2F4F5] font-normal">
+          {utcDisplay}
+        </span>
+        <div className="flex items-center gap-1.5 pl-2 border-l border-white/10" title="System Status: Operational">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="hidden lg:inline text-[10px] tracking-wider uppercase text-[#82909B]">
+            LIVE
+          </span>
         </div>
       </div>
     </header>

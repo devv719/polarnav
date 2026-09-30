@@ -78,6 +78,8 @@ function AnimatedRoutes() {
               </motion.div>
             }
           />
+          <Route path="/modules/sea-ice" element={<Navigate to="/sea-ice" replace />} />
+
           <Route
             path="/icebergs"
             element={
@@ -86,6 +88,8 @@ function AnimatedRoutes() {
               </motion.div>
             }
           />
+          <Route path="/modules/icebergs" element={<Navigate to="/icebergs" replace />} />
+
           <Route
             path="/routes"
             element={
@@ -94,6 +98,8 @@ function AnimatedRoutes() {
               </motion.div>
             }
           />
+          <Route path="/modules/routes" element={<Navigate to="/routes" replace />} />
+
           <Route
             path="/ocean"
             element={
@@ -102,6 +108,8 @@ function AnimatedRoutes() {
               </motion.div>
             }
           />
+          <Route path="/modules/ocean" element={<Navigate to="/ocean" replace />} />
+          <Route path="/modules/weather" element={<Navigate to="/ocean" replace />} />
           <Route
             path="/weather"
             element={<Navigate to="/ocean" replace />}

@@ -1,6 +1,6 @@
 /**
- * Antarctic Research Stations for Geographic Reference & Destination Planning
- * (MoES / NCPOR Indian & International Stations)
+ * Antarctic Research Stations & Gateway Ports for Geographic Reference & Destination Planning
+ * (MoES / NCPOR Indian & International Stations, Antarctic Gateways)
  */
 export const ANTARCTIC_STATIONS = [
   {
@@ -43,17 +43,17 @@ export const ANTARCTIC_STATIONS = [
     iceCondition: 'Pack Ice'
   },
   {
-    id: 'casey',
-    name: 'Casey Station',
-    operator: 'Australia (AAD)',
-    coordinates: [-66.2822, 110.5278],
-    sector: 'Vincennes Bay, Wilkes Land',
-    established: 1969,
+    id: 'palmer',
+    name: 'Palmer Station',
+    operator: 'United States (USAP)',
+    coordinates: [-64.7742, -64.0531],
+    sector: 'Anvers Island, Antarctic Peninsula',
+    established: 1968,
     status: 'Operational',
     type: 'Research Base',
-    currentTemp: -11.8,
-    windSpeed: 22,
-    iceCondition: 'Drift Ice'
+    currentTemp: -3.4,
+    windSpeed: 14,
+    iceCondition: 'Drift Ice / Open Water'
   },
   {
     id: 'rothera',
@@ -67,5 +67,44 @@ export const ANTARCTIC_STATIONS = [
     currentTemp: -6.5,
     windSpeed: 15,
     iceCondition: 'Seasonal Open Water'
+  },
+  {
+    id: 'casey',
+    name: 'Casey Station',
+    operator: 'Australia (AAD)',
+    coordinates: [-66.2822, 110.5278],
+    sector: 'Vincennes Bay, Wilkes Land',
+    established: 1969,
+    status: 'Operational',
+    type: 'Research Base',
+    currentTemp: -11.8,
+    windSpeed: 22,
+    iceCondition: 'Drift Ice'
+  },
+  {
+    id: 'ushuaia',
+    name: 'Port of Ushuaia',
+    operator: 'Argentina (Polar Gateway)',
+    coordinates: [-54.8019, -68.3030],
+    sector: 'Beagle Channel, Tierra del Fuego',
+    established: 1884,
+    status: 'Operational Port',
+    type: 'Gateway Port',
+    currentTemp: 4.5,
+    windSpeed: 18,
+    iceCondition: 'Ice Free'
+  },
+  {
+    id: 'punta_arenas',
+    name: 'Port of Punta Arenas',
+    operator: 'Chile (Polar Gateway)',
+    coordinates: [-53.1638, -70.9171],
+    sector: 'Strait of Magellan',
+    established: 1848,
+    status: 'Operational Port',
+    type: 'Gateway Port',
+    currentTemp: 5.2,
+    windSpeed: 24,
+    iceCondition: 'Ice Free'
   }
 ];

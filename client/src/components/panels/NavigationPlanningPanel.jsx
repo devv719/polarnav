@@ -1,196 +1,200 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X,
-  Navigation,
-  ArrowRight,
-  Route as RouteIcon,
-  Wind,
-  Thermometer,
-  Waves,
-  Eye,
-  Clock,
-  Fuel,
-  ChevronDown,
-  ChevronUp,
-  Compass,
-  Shield,
-  AlertCircle,
-  CheckCircle,
-  MapPin,
-  Activity
-} from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Navigation, Anchor, Compass, Radio, MapPin, CheckCircle, ShieldAlert } from 'lucide-react';
 import { formatCoordinates } from '../../utils/formatters';
 import { analyzeRouteHazards, estimateRouteEnvironment } from '../../utils/routeAnalysis';
+import { ANTARCTIC_STATIONS } from '../../data/antarcticStations';
 
-function riskClass(level) {
+// ─── Primitive helpers ────────────────────────────────────────────────────────
+
+function riskColor(level) {
   const l = (level || '').toUpperCase();
-  if (l === 'CRITICAL' || l === 'EXTREME') return 'text-rose-700 bg-rose-50 border-rose-200';
-  if (l === 'HIGH') return 'text-amber-700 bg-amber-50 border-amber-200';
-  if (l === 'MODERATE') return 'text-yellow-700 bg-yellow-50 border-yellow-200';
-  return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  if (l === 'CRITICAL') return '#dc2626';
+  if (l === 'HIGH')     return '#d97706';
+  if (l === 'MODERATE') return '#ca8a04';
+  return '#3385C6';
 }
 
-function riskDot(level) {
-  const l = (level || '').toUpperCase();
-  if (l === 'CRITICAL' || l === 'EXTREME') return 'bg-rose-600';
-  if (l === 'HIGH') return 'bg-amber-500';
-  if (l === 'MODERATE') return 'bg-yellow-500';
-  return 'bg-emerald-500';
+function Divider() {
+  return <div className="w-full h-px bg-[#CCE0F0]" />;
 }
 
-function SectionLabel({ children }) {
+function SectionHeading({ children }) {
   return (
-    <div className="text-[10px] uppercase tracking-[0.2em] text-[#68869E] font-mono font-bold">
+    <p className="text-[11px] font-sans font-semibold tracking-[0.14em] uppercase text-[#68869E]">
       {children}
-    </div>
+    </p>
   );
 }
 
-function MetricCell({ label, value, unit, accent }) {
+function Metric({ value, unit, label }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[28px] font-display font-bold text-[#0F2130] leading-none tracking-tight">
+          {value}
+        </span>
+        <span className="text-sm font-sans text-[#68869E] font-medium">
+          {unit}
+        </span>
+      </div>
+      <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#68869E] mt-1 font-semibold">
         {label}
-      </div>
-      <div className={`text-sm font-bold font-mono mt-0.5 ${accent ? 'text-[#3385C6]' : 'text-[#0F2130]'}`}>
-        {value}
-        {unit && <span className="text-[10px] font-normal text-[#68869E] ml-0.5">{unit}</span>}
-      </div>
+      </p>
     </div>
   );
 }
 
-function RouteCard({ route, isActive, onSelect }) {
+// ─── Route option card ────────────────────────────────────────────────────────
+
+function RouteOption({ route, isActive, onSelect, riskHazards }) {
   if (!route) return null;
+
   const isRecommended = route.isRecommended;
+  const criticals = (riskHazards || []).filter(b => b.routeRisk === 'CRITICAL').length;
+  const highs = (riskHazards || []).filter(b => b.routeRisk === 'HIGH').length;
+  const routeRisk = criticals > 0 ? 'CRITICAL' : highs > 0 ? 'HIGH' : isRecommended ? 'LOW' : 'MODERATE';
+
   return (
-    <button
+    <motion.button
+      layout
       onClick={() => onSelect(route)}
-      className={`w-full text-left p-3 rounded-sm border transition-all font-sans ${
-        isActive
-          ? isRecommended
-            ? 'bg-[#E8F3FA] border-[#3385C6] shadow-xs'
-            : 'bg-amber-50 border-amber-300 shadow-xs'
-          : 'bg-[#F4F8FB] border-[#CCE0F0] hover:border-[#3385C6]/60 hover:bg-[#EFF6FB]'
+      whileHover={{ x: 2 }}
+      transition={{ duration: 0.15 }}
+      className={`w-full text-left transition-colors group ${
+        isActive ? '' : 'opacity-60 hover:opacity-85'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isRecommended ? 'bg-[#3385C6]' : 'bg-amber-400'}`} />
-          <span className="text-[10px] uppercase tracking-widest font-mono font-bold text-[#68869E]">
-            {isRecommended ? 'Route 01 — RECOMMENDED' : 'Route 02 — DIRECT'}
-          </span>
-        </div>
-        {isActive && (
-          <span className="text-[9px] font-mono font-bold text-[#3385C6] uppercase tracking-wider">
-            ACTIVE
-          </span>
-        )}
-      </div>
-      <div className="text-xs font-sans font-semibold text-[#0F2130] mb-2 leading-tight">
-        {route.name}
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
-        <div>
-          <div className="text-[9px] text-[#68869E] uppercase tracking-wider">Distance</div>
-          <div className="font-bold text-[#1E3A52]">{route.totalDistanceNM}<span className="font-normal text-[#68869E]"> NM</span></div>
-        </div>
-        <div>
-          <div className="text-[9px] text-[#68869E] uppercase tracking-wider">ETA</div>
-          <div className="font-bold text-[#1E3A52]">{route.estimatedTimeHours}<span className="font-normal text-[#68869E]"> H</span></div>
-        </div>
-        <div>
-          <div className="text-[9px] text-[#68869E] uppercase tracking-wider">Fuel</div>
-          <div className="font-bold text-[#1E3A52]">{route.estimatedFuelMT}<span className="font-normal text-[#68869E]"> MT</span></div>
-        </div>
-      </div>
-      <div className="mt-2">
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold border uppercase tracking-wider ${
-          route.riskCategory?.includes('LOW') ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${route.riskCategory?.includes('LOW') ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-          {route.riskCategory?.replace('_', ' ') || 'ASSESSED'}
-        </span>
-      </div>
-    </button>
-  );
-}
+      <div className={`flex items-start gap-4 p-4 border transition-all ${
+        isActive
+          ? 'border-[#0F2130] bg-[#FFFFFF] shadow-sm'
+          : 'border-[#CCE0F0] bg-[#F4F8FB] hover:border-[#1E3A52]/40'
+      }`}>
+        <div className={`mt-1 w-3 h-3 rounded-full border-2 shrink-0 transition-colors ${
+          isActive ? 'border-[#0F2130] bg-[#0F2130]' : 'border-[#CCE0F0]'
+        }`} />
 
-function IcebergHazardRow({ iceberg, isExpanded, onToggle, onSelectIceberg }) {
-  const risk = iceberg.routeRisk || iceberg.riskScore || 'MODERATE';
-  return (
-    <div className="border border-[#CCE0F0] rounded-sm overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-2.5 hover:bg-[#F4F8FB] transition-colors text-left"
-      >
-        <div className="flex items-center gap-2.5">
-          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${riskDot(risk)}`} />
-          <div>
-            <div className="text-xs font-mono font-bold text-[#0F2130]">{iceberg.id}</div>
-            <div className="text-[10px] font-sans text-[#68869E] mt-0.5">{iceberg.type || 'Tabular Iceberg'}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline justify-between gap-2 mb-2">
+            <div>
+              <p className="text-[10px] font-sans uppercase tracking-[0.14em] text-[#68869E] font-semibold">
+                {isRecommended ? 'ROUTE 01 — AI OPTIMIZED CORRIDOR' : 'ROUTE 02 — DIRECT RHUMB LINE'}
+              </p>
+              <p className="text-sm font-sans font-semibold text-[#0F2130] mt-0.5 leading-tight">
+                {route.name}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="text-right mr-1">
-            <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[9px] font-mono font-bold border uppercase tracking-wider ${riskClass(risk)}`}>
-              {risk}
-            </span>
-            {iceberg.routeDistanceNM != null && (
-              <div className="text-[9px] font-mono text-[#68869E] mt-0.5">
-                {iceberg.routeDistanceNM} NM off route
+
+          <div className="flex items-end gap-5 flex-wrap">
+            <div>
+              <span className="text-2xl font-display font-bold text-[#0F2130] tracking-tight leading-none">
+                {route.totalDistanceNM}
+              </span>
+              <span className="text-xs text-[#68869E] ml-1">NM</span>
+            </div>
+            <div>
+              <span className="text-2xl font-display font-bold text-[#0F2130] tracking-tight leading-none">
+                {route.estimatedTimeHours}
+              </span>
+              <span className="text-xs text-[#68869E] ml-1">H</span>
+            </div>
+            {route.estimatedFuelMT && (
+              <div>
+                <span className="text-2xl font-display font-bold text-[#0F2130] tracking-tight leading-none">
+                  {route.estimatedFuelMT}
+                </span>
+                <span className="text-xs text-[#68869E] ml-1">MT FUEL</span>
               </div>
             )}
           </div>
-          {isExpanded ? (
-            <ChevronUp className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-          ) : (
-            <ChevronDown className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-          )}
+
+          <div className="mt-2 flex items-center gap-2">
+            <span
+              className="text-[10px] font-sans font-bold uppercase tracking-[0.12em]"
+              style={{ color: riskColor(routeRisk) }}
+            >
+              {routeRisk} ROUTE RISK
+            </span>
+            {(criticals > 0 || highs > 0) && (
+              <span className="text-[10px] text-[#68869E]">
+                · {criticals + highs} hazard{criticals + highs !== 1 ? 's' : ''} on path
+              </span>
+            )}
+          </div>
         </div>
-      </button>
+
+        <ChevronRight className={`w-4 h-4 shrink-0 mt-3 transition-colors ${
+          isActive ? 'text-[#0F2130]' : 'text-[#CCE0F0]'
+        }`} />
+      </div>
+    </motion.button>
+  );
+}
+
+// ─── Iceberg hazard row ───────────────────────────────────────────────────────
+
+function HazardRow({ iceberg, onSelectIceberg }) {
+  const [open, setOpen] = useState(false);
+  const risk = iceberg.routeRisk || 'LOW';
+
+  return (
+    <div className="border-b border-[#CCE0F0] py-3.5 last:border-b-0">
+      <div
+        className="flex items-baseline justify-between cursor-pointer group"
+        onClick={() => setOpen(!open)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: riskColor(risk) }}
+          />
+          <span className="text-sm font-sans font-semibold text-[#0F2130] truncate group-hover:text-[#3385C6] transition-colors">
+            {iceberg.name}
+          </span>
+          <span
+            className="text-[10px] font-sans font-bold uppercase tracking-[0.1em]"
+            style={{ color: riskColor(risk) }}
+          >
+            {risk}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0 ml-2">
+          {iceberg.cpaDistanceNM != null && (
+            <span className="text-xs font-mono text-[#68869E]">
+              CPA {iceberg.cpaDistanceNM} NM
+            </span>
+          )}
+          <ChevronDown className={`w-3.5 h-3.5 text-[#68869E] transition-transform ${open ? 'rotate-180' : ''}`} />
+        </div>
+      </div>
+
       <AnimatePresence>
-        {isExpanded && (
+        {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="overflow-hidden"
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden mt-3 pt-3 border-t border-[#CCE0F0]/60 space-y-2 text-xs font-sans text-[#68869E]"
           >
-            <div className="px-3 pb-3 pt-1 bg-[#F4F8FB] border-t border-[#CCE0F0] space-y-2">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-[11px]">
-                <div>
-                  <span className="text-[#68869E]">Position: </span>
-                  <span className="text-[#1E3A52] font-semibold">
-                    {formatCoordinates(iceberg.latitude ?? iceberg.coordinates?.[0], iceberg.longitude ?? iceberg.coordinates?.[1])}
-                  </span>
-                </div>
-                {iceberg.lengthKm && (
-                  <div>
-                    <span className="text-[#68869E]">Size: </span>
-                    <span className="text-[#1E3A52] font-semibold">{iceberg.lengthKm}x{iceberg.widthKm} km</span>
-                  </div>
-                )}
-                {iceberg.driftSpeedKnots && (
-                  <div>
-                    <span className="text-[#68869E]">Drift: </span>
-                    <span className="text-[#1E3A52] font-semibold">{iceberg.driftSpeedKnots} kts @ {iceberg.driftHeading}T</span>
-                  </div>
-                )}
-                {iceberg.hazardRadiusNM && (
-                  <div>
-                    <span className="text-[#68869E]">Hazard R: </span>
-                    <span className="text-[#1E3A52] font-semibold">{iceberg.hazardRadiusNM} NM</span>
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <div>Type: <span className="text-[#1E3A52] font-medium">{iceberg.type || 'Tabular Iceberg'}</span></div>
+              <div>Drift: <span className="text-[#1E3A52] font-medium">{iceberg.driftSpeedKnots || 0.8} kts @ {iceberg.driftHeading || 55}°T</span></div>
+              <div>Length: <span className="text-[#1E3A52] font-medium">{iceberg.lengthKm || '—'} km</span></div>
+              <div>Hazard Zone: <span className="text-[#1E3A52] font-medium">{iceberg.hazardRadiusNM || 3.5} NM</span></div>
+            </div>
+
+            <div className="pt-2">
               <button
-                onClick={() => onSelectIceberg && onSelectIceberg(iceberg)}
-                className="w-full text-center text-[10px] font-mono font-bold text-[#3385C6] hover:text-[#246699] py-1 border border-[#CCE0F0] hover:border-[#3385C6] rounded-sm bg-white transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectIceberg(iceberg);
+                }}
+                className="w-full py-1.5 border border-[#CCE0F0] hover:border-[#1E3A52] text-[#1E3A52] text-xs font-sans font-semibold transition-colors bg-white hover:bg-[#F4F8FB]"
               >
-                Run Drift and Melt Analysis
+                Run Drift & Melt Analysis →
               </button>
             </div>
           </motion.div>
@@ -200,383 +204,393 @@ function IcebergHazardRow({ iceberg, isExpanded, onToggle, onSelectIceberg }) {
   );
 }
 
+// ─── Main Navigation Workspace Panel ──────────────────────────────────────────
+
 export default function NavigationPlanningPanel({
   destination,
   vessel,
+  vessels = [],
+  stations = [],
   routes,
-  icebergs,
+  icebergs = [],
+  activeRouteType = 'recommended',
   onClose,
   onSelectIceberg,
   onSetActiveRoute,
-  activeRouteType = 'recommended'
+  onChangeVessel,
+  onChangeDestination,
+  onStartNavigation
 }) {
-  const [selectedRouteType, setSelectedRouteType] = useState(activeRouteType);
-  const [expandedIceberg, setExpandedIceberg] = useState(null);
-  const [showRationale, setShowRationale] = useState(false);
+  const [selectedType, setSelectedType] = useState(activeRouteType);
+  const [isNavActive, setIsNavActive] = useState(false);
 
-  useEffect(() => {
-    setSelectedRouteType(activeRouteType);
-  }, [activeRouteType]);
+  const activeRoute = selectedType === 'recommended' ? routes?.recommended : routes?.alternative;
+  const otherRoute  = selectedType === 'recommended' ? routes?.alternative  : routes?.recommended;
 
-  const activeRoute = selectedRouteType === 'recommended' ? routes?.recommended : routes?.alternative;
+  // Available destination stations
+  const availableStations = useMemo(() => {
+    if (stations && stations.length > 0) {
+      // Merge unique stations from dataset
+      const combined = [...ANTARCTIC_STATIONS];
+      stations.forEach(st => {
+        if (!combined.some(s => s.id === st.id || s.name.toLowerCase() === st.name.toLowerCase())) {
+          combined.push({
+            id: st.id,
+            name: st.name,
+            operator: st.country || st.operatorPrimary || 'International',
+            coordinates: st.coordinates || [st.latitude, st.longitude]
+          });
+        }
+      });
+      return combined;
+    }
+    return ANTARCTIC_STATIONS;
+  }, [stations]);
 
+  // Route-aware hazard analysis for the currently active route
   const routeHazards = useMemo(() => {
     if (!activeRoute?.waypoints) return [];
-    return analyzeRouteHazards(icebergs, activeRoute.waypoints);
-  }, [icebergs, activeRoute]);
+    return analyzeRouteHazards(icebergs || [], activeRoute.waypoints);
+  }, [activeRoute, icebergs]);
 
-  const routeEnv = useMemo(() => {
+  const altHazards = useMemo(() => {
+    if (!otherRoute?.waypoints) return [];
+    return analyzeRouteHazards(icebergs || [], otherRoute.waypoints);
+  }, [otherRoute, icebergs]);
+
+  const env = useMemo(() => {
     if (!activeRoute?.waypoints) return null;
     return estimateRouteEnvironment(activeRoute.waypoints, vessel);
   }, [activeRoute, vessel]);
 
   const handleSelectRoute = (route) => {
     const type = route.isRecommended ? 'recommended' : 'alternative';
-    setSelectedRouteType(type);
-    if (onSetActiveRoute) onSetActiveRoute(route);
+    setSelectedType(type);
+    onSetActiveRoute?.(route);
   };
 
-  const criticalHazards = routeHazards.filter(b => b.routeRisk === 'CRITICAL');
-  const highHazards = routeHazards.filter(b => b.routeRisk === 'HIGH');
-  const closeHazards = routeHazards.filter(b => b.routeRisk !== 'LOW' && b.routeRisk !== 'UNKNOWN');
+  const handleVesselChange = (e) => {
+    const mmsiOrId = e.target.value;
+    const selectedVessel = (vessels || []).find(v => v.mmsi === mmsiOrId || v.id === mmsiOrId);
+    if (selectedVessel && onChangeVessel) {
+      onChangeVessel(selectedVessel);
+    }
+  };
 
-  const overallRisk = criticalHazards.length > 0 ? 'CRITICAL' :
-    highHazards.length > 0 ? 'HIGH' :
-    closeHazards.length > 0 ? 'MODERATE' : 'LOW';
+  const handleStationChange = (e) => {
+    const stationId = e.target.value;
+    const selectedSt = availableStations.find(s => s.id === stationId);
+    if (selectedSt && onChangeDestination) {
+      onChangeDestination(selectedSt);
+    }
+  };
+
+  const handleStartNavClick = () => {
+    setIsNavActive(true);
+    if (onStartNavigation) {
+      onStartNavigation({
+        vessel,
+        destination,
+        route: activeRoute
+      });
+    }
+  };
+
+  const criticals = routeHazards.filter(b => b.routeRisk === 'CRITICAL');
+  const highs     = routeHazards.filter(b => b.routeRisk === 'HIGH');
+  const overallRisk = criticals.length > 0 ? 'CRITICAL' : highs.length > 0 ? 'HIGH' :
+    routeHazards.some(b => b.routeRisk === 'MODERATE') ? 'MODERATE' : 'LOW';
 
   if (!destination) return null;
 
   return (
-    <AnimatePresence>
-      <motion.aside
-        initial={{ opacity: 0, x: 32 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 32 }}
-        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-0 right-0 bottom-0 z-[1001] w-[420px] max-w-full bg-[#FFFFFF] border-l border-[#CCE0F0] flex flex-col select-none font-sans overflow-hidden shadow-2xl max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:w-full max-md:max-h-[85vh] max-md:border-l-0 max-md:border-t"
-      >
-        {/* PANEL HEADER */}
-        <div className="px-5 pt-5 pb-4 border-b border-[#CCE0F0] shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-[#E8F3FA] text-[#3385C6]">
-                <Navigation className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-[#68869E] font-bold">
-                NAVIGATION PLANNING
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="h-full flex flex-col bg-[#FAFCFD] border-l border-[#CCE0F0] overflow-hidden select-none"
+    >
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <div className="px-7 pt-6 pb-4 shrink-0 border-b border-[#CCE0F0] bg-white">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-[#68869E]">
+              AIS LIVE TARGET NAVIGATION
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-[#CCE0F0] hover:text-[#1E3A52] transition-colors -mt-0.5 -mr-0.5 p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* ── FLEET & DESTINATION TARGET SELECTORS ── */}
+        <div className="space-y-3 pt-1">
+          {/* Origin Vessel Selector */}
+          <div>
+            <label className="flex items-center justify-between text-[10px] font-sans font-semibold uppercase tracking-wider text-[#68869E] mb-1">
+              <span className="flex items-center gap-1.5">
+                <Anchor className="w-3 h-3 text-[#3385C6]" />
+                Live Polar Vessel
               </span>
+              <span className="font-mono text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                AIS STREAM ACTIVE
+              </span>
+            </label>
+            <div className="relative">
+              <select
+                value={vessel?.mmsi || vessel?.id || ''}
+                onChange={handleVesselChange}
+                className="w-full py-2 pl-3 pr-8 bg-[#F4F8FB] border border-[#CCE0F0] text-xs font-sans font-bold text-[#0F2130] rounded-sm focus:outline-none focus:border-[#3385C6] transition-colors cursor-pointer appearance-none"
+              >
+                {(vessels && vessels.length > 0 ? vessels : [vessel]).filter(Boolean).map(v => (
+                  <option key={v.mmsi || v.id} value={v.mmsi || v.id}>
+                    {v.name} ({v.mmsi ? `MMSI: ${v.mmsi}` : v.callSign || 'AIS'}) — {v.speedKnots} kts
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-[#68869E] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
-            <button
-              onClick={onClose}
-              className="p-1 text-[#68869E] hover:text-[#0F2130] rounded hover:bg-[#F4F8FB] transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+
+            {/* Live Vessel Telemetry strip */}
+            {vessel && (
+              <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono text-[#68869E] bg-[#F4F8FB]/80 px-2.5 py-1 rounded border border-[#CCE0F0]/50">
+                <span>SPD: <strong className="text-[#0F2130]">{vessel.speedKnots} KT</strong></span>
+                <span>HDG: <strong className="text-[#0F2130]">{vessel.heading}°T</strong></span>
+                <span>MMSI: <strong className="text-[#0F2130]">{vessel.mmsi || '419000123'}</strong></span>
+                <span>ETA: <strong className="text-[#0F2130]">{vessel.eta ? vessel.eta.split(' ')[0] : 'In Transit'}</strong></span>
+              </div>
+            )}
           </div>
 
-          {/* FROM > TO route header */}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex-1 min-w-0">
-              <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-mono font-semibold mb-0.5">FROM</div>
-              <div className="text-xs font-bold text-[#0F2130] font-sans truncate">{vessel?.name || 'ORV Sagar Nidhi'}</div>
-              <div className="text-[10px] font-mono text-[#68869E]">
-                {formatCoordinates(vessel?.coordinates?.[0] ?? vessel?.latitude, vessel?.coordinates?.[1] ?? vessel?.longitude)}
-              </div>
-            </div>
-            <div className="shrink-0 text-[#3385C6]">
-              <ArrowRight className="w-4 h-4" />
-            </div>
-            <div className="flex-1 min-w-0 text-right">
-              <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-mono font-semibold mb-0.5">DESTINATION</div>
-              <div className="text-xs font-bold text-[#0F2130] font-sans truncate">{destination.name}</div>
-              <div className="text-[10px] font-mono text-[#68869E]">
+          {/* Destination Target Selector */}
+          <div>
+            <label className="flex items-center justify-between text-[10px] font-sans font-semibold uppercase tracking-wider text-[#68869E] mb-1">
+              <span className="flex items-center gap-1.5">
+                <MapPin className="w-3 h-3 text-[#3385C6]" />
+                Target Research Station / Port
+              </span>
+              <span className="font-mono text-[9px] text-[#3385C6]">
                 {formatCoordinates(
                   destination.coordinates?.[0] ?? destination.latitude,
                   destination.coordinates?.[1] ?? destination.longitude
                 )}
-              </div>
+              </span>
+            </label>
+            <div className="relative">
+              <select
+                value={destination.id || ''}
+                onChange={handleStationChange}
+                className="w-full py-2 pl-3 pr-8 bg-[#F4F8FB] border border-[#CCE0F0] text-xs font-sans font-bold text-[#0F2130] rounded-sm focus:outline-none focus:border-[#3385C6] transition-colors cursor-pointer appearance-none"
+              >
+                {availableStations.map(st => (
+                  <option key={st.id} value={st.id}>
+                    {st.name} ({st.operator || st.country || 'Antarctic'})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-[#68869E] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Overall assessment badge */}
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-sm border text-xs font-mono font-bold ${riskClass(overallRisk)}`}>
-            <span className={`w-2 h-2 rounded-full ${riskDot(overallRisk)}`} />
-            <span>ROUTE ASSESSMENT: {overallRisk}</span>
-            {criticalHazards.length > 0 && (
-              <span className="ml-auto text-[10px] font-normal">
-                {criticalHazards.length} CRITICAL HAZARD{criticalHazards.length !== 1 ? 'S' : ''}
-              </span>
-            )}
+      {/* ── SCROLLABLE BODY ─────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+
+        {/* ── ROUTE CORRIDOR SUMMARY ── */}
+        <div className="px-7 py-4 border-b border-[#CCE0F0] bg-white">
+          <SectionHeading>Active Corridor Overview</SectionHeading>
+          <div className="mt-2.5 flex items-center justify-between text-xs font-sans">
+            <div className="max-w-[42%]">
+              <p className="text-[#68869E] text-[10px] font-semibold uppercase">Origin</p>
+              <p className="font-bold text-[#0F2130] truncate">{vessel?.name || 'ORV Sagar Nidhi'}</p>
+            </div>
+            <div className="flex-1 mx-3 h-px bg-[#CCE0F0] relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Navigation className="w-3 h-3 text-[#3385C6] rotate-90 bg-white" />
+              </div>
+            </div>
+            <div className="text-right max-w-[42%]">
+              <p className="text-[#68869E] text-[10px] font-semibold uppercase">Destination</p>
+              <p className="font-bold text-[#0F2130] truncate">{destination.name}</p>
+            </div>
           </div>
         </div>
 
-        {/* SCROLLABLE BODY */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-5">
+        {/* ── ROUTE OPTIONS ── */}
+        <div className="px-7 py-5 border-b border-[#CCE0F0] space-y-2">
+          <SectionHeading>Route Options</SectionHeading>
+          <div className="mt-3 space-y-2">
+            <RouteOption
+              route={routes?.recommended}
+              isActive={selectedType === 'recommended'}
+              onSelect={handleSelectRoute}
+              riskHazards={selectedType === 'recommended' ? routeHazards : altHazards}
+            />
+            <RouteOption
+              route={routes?.alternative}
+              isActive={selectedType === 'alternative'}
+              onSelect={handleSelectRoute}
+              riskHazards={selectedType === 'alternative' ? routeHazards : altHazards}
+            />
+          </div>
 
-          {/* ROUTE SELECTION */}
-          <div className="space-y-2">
-            <SectionLabel>Route Options</SectionLabel>
-            <div className="space-y-2">
-              <RouteCard
-                route={routes?.recommended}
-                isActive={selectedRouteType === 'recommended'}
-                onSelect={handleSelectRoute}
-              />
-              <RouteCard
-                route={routes?.alternative}
-                isActive={selectedRouteType === 'alternative'}
-                onSelect={handleSelectRoute}
-              />
+          {activeRoute?.decisionRationale && (
+            <p className="text-xs text-[#68869E] font-sans leading-relaxed pt-2">
+              {activeRoute.decisionRationale}
+            </p>
+          )}
+        </div>
+
+        {/* ── ROUTE INTELLIGENCE ── */}
+        {activeRoute && (
+          <div className="px-7 py-5 border-b border-[#CCE0F0]">
+            <SectionHeading>Route Intelligence & Telemetry</SectionHeading>
+
+            <div className="mt-4 grid grid-cols-3 gap-x-4 gap-y-5">
+              <Metric value={activeRoute.totalDistanceNM} unit="NM" label="Distance" />
+              <Metric value={activeRoute.estimatedTimeHours} unit="H" label="Estimated Time" />
+              <Metric value={activeRoute.estimatedFuelMT || '—'} unit={activeRoute.estimatedFuelMT ? 'MT' : ''} label="Fuel" />
             </div>
 
-            {activeRoute?.decisionRationale && (
-              <div>
-                <button
-                  onClick={() => setShowRationale(r => !r)}
-                  className="flex items-center gap-1.5 text-[10px] font-mono text-[#3385C6] hover:text-[#246699] transition-colors"
-                >
-                  {showRationale ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  Route Decision Rationale
-                </button>
-                <AnimatePresence>
-                  {showRationale && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="mt-2 text-[11px] text-[#1E3A52] leading-relaxed bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm p-2.5 font-sans">
-                        {activeRoute.decisionRationale}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            <Divider />
+
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+              {env && (
+                <>
+                  <div>
+                    <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#68869E] font-semibold">
+                      Wind Velocity
+                    </p>
+                    <p className="text-lg font-display font-bold text-[#0F2130] mt-1 leading-none">
+                      {env.estimatedWindKnots}
+                      <span className="text-sm font-sans font-normal text-[#68869E] ml-1">kt</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#68869E] font-semibold">
+                      Swell Height
+                    </p>
+                    <p className="text-lg font-display font-bold text-[#0F2130] mt-1 leading-none">
+                      {env.estimatedWaveHeightM}
+                      <span className="text-sm font-sans font-normal text-[#68869E] ml-1">m</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#68869E] font-semibold">
+                      Sea Ice Concentration
+                    </p>
+                    <p className="text-lg font-display font-bold mt-1 leading-none"
+                      style={{ color: env.avgSeaIceConcentration > 70 ? '#dc2626' : env.avgSeaIceConcentration > 40 ? '#d97706' : '#3385C6' }}>
+                      {env.avgSeaIceConcentration}
+                      <span className="text-sm font-sans font-normal text-[#68869E] ml-1">%</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#68869E] font-semibold">
+                      Corridor Visibility
+                    </p>
+                    <p className="text-lg font-display font-bold text-[#0F2130] mt-1 leading-none">
+                      {env.visibilityNM}
+                      <span className="text-sm font-sans font-normal text-[#68869E] ml-1">NM</span>
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <div className="col-span-2 pt-2">
+                <Divider />
+                <div className="flex items-baseline justify-between mt-3">
+                  <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#68869E] font-semibold">
+                    Corridor Risk Classification
+                  </p>
+                  <p
+                    className="text-lg font-display font-bold tracking-tight"
+                    style={{ color: riskColor(overallRisk) }}
+                  >
+                    {overallRisk}
+                  </p>
+                </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── ROUTE HAZARDS ── */}
+        <div className="px-7 py-5">
+          <div className="flex items-baseline justify-between">
+            <SectionHeading>Route Hazards</SectionHeading>
+            {routeHazards.length > 0 && (
+              <p className="text-[11px] text-[#68869E] font-sans">
+                {routeHazards.length} iceberg{routeHazards.length !== 1 ? 's' : ''} tracked
+              </p>
             )}
           </div>
 
-          {/* ROUTE METRICS */}
-          {activeRoute && (
-            <div className="space-y-2">
-              <SectionLabel>Route Metrics</SectionLabel>
-              <div className="grid grid-cols-2 gap-3 p-3 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm">
-                <div className="flex items-center gap-2">
-                  <RouteIcon className="w-3.5 h-3.5 text-[#3385C6] shrink-0" />
-                  <MetricCell label="Distance" value={activeRoute.totalDistanceNM} unit="NM" accent />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell label="ETA" value={activeRoute.estimatedTimeHours} unit="H" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Fuel className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell label="Fuel" value={activeRoute.estimatedFuelMT} unit="MT" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell
-                    label="Ice Risk"
-                    value={activeRoute.riskCategory?.replace('_RISK', '') || 'LOW'}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ENVIRONMENTAL CONDITIONS */}
-          {routeEnv && (
-            <div className="space-y-2">
-              <SectionLabel>Environmental Exposure</SectionLabel>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 p-3 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm">
-                <div className="flex items-center gap-2">
-                  <Wind className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell label="Wind" value={routeEnv.estimatedWindKnots} unit="kts" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Waves className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell label="Swell" value={routeEnv.estimatedWaveHeightM} unit="m" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Thermometer className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell label="Temp" value={routeEnv.estimatedTempC} unit="C" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Eye className="w-3.5 h-3.5 text-[#68869E] shrink-0" />
-                  <MetricCell label="Visibility" value={routeEnv.visibilityNM} unit="NM" />
-                </div>
-              </div>
-              <div className="p-3 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm space-y-1.5">
-                <div className="flex justify-between text-[10px] font-mono text-[#68869E]">
-                  <span className="flex items-center gap-1.5">
-                    <Activity className="w-3 h-3" />
-                    Sea Ice Concentration
-                  </span>
-                  <span className="font-bold text-[#1E3A52]">{routeEnv.avgSeaIceConcentration}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-[#CCE0F0] rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${routeEnv.avgSeaIceConcentration}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className={`h-full rounded-full ${
-                      routeEnv.avgSeaIceConcentration > 70 ? 'bg-rose-500' :
-                      routeEnv.avgSeaIceConcentration > 40 ? 'bg-amber-400' : 'bg-[#3385C6]'
-                    }`}
-                  />
-                </div>
-                <div className="text-[9px] font-mono text-[#68869E] uppercase tracking-wider">
-                  {routeEnv.polarCodeRequirement}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ICEBERG HAZARD ASSESSMENT */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <SectionLabel>Iceberg Hazards Along Route</SectionLabel>
-              {routeHazards.length > 0 && (
-                <span className="text-[9px] font-mono text-[#68869E]">
-                  {routeHazards.filter(b => b.routeRisk !== 'LOW').length} within alert radius
-                </span>
-              )}
-            </div>
-
+          <div className="mt-3">
             {routeHazards.length === 0 ? (
-              <div className="flex items-center gap-2.5 p-3 bg-emerald-50 border border-emerald-200 rounded-sm">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                <div className="text-xs font-sans text-emerald-800">
-                  No tracked icebergs within hazard range of this route.
-                </div>
-              </div>
+              <p className="text-sm text-[#68869E] font-sans py-3">
+                No tracked icebergs within significant range of this route corridor.
+              </p>
             ) : (
-              <div className="space-y-1.5">
-                <div className="flex gap-2 mb-2 flex-wrap">
-                  {criticalHazards.length > 0 && (
-                    <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
-                      {criticalHazards.length} CRITICAL
-                    </span>
-                  )}
-                  {highHazards.length > 0 && (
-                    <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      {highHazards.length} HIGH
-                    </span>
-                  )}
-                  {routeHazards.filter(b => b.routeRisk === 'MODERATE').length > 0 && (
-                    <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-yellow-700 bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                      {routeHazards.filter(b => b.routeRisk === 'MODERATE').length} MOD
-                    </span>
-                  )}
-                </div>
+              <div>
+                {criticals.length > 0 && (
+                  <div className="mb-4 py-3 border-l-2 border-rose-600 pl-4 bg-rose-50">
+                    <p className="text-xs font-sans font-semibold text-rose-800">
+                      {criticals.length} iceberg{criticals.length !== 1 ? 's' : ''} within critical proximity of the route corridor.
+                      Route alteration or enhanced watch required before departure.
+                    </p>
+                  </div>
+                )}
 
-                {routeHazards.map((berg) => (
-                  <IcebergHazardRow
+                {routeHazards.map(berg => (
+                  <HazardRow
                     key={berg.id}
                     iceberg={berg}
-                    isExpanded={expandedIceberg === berg.id}
-                    onToggle={() => setExpandedIceberg(expandedIceberg === berg.id ? null : berg.id)}
                     onSelectIceberg={onSelectIceberg}
                   />
                 ))}
               </div>
             )}
           </div>
-
-          {/* TACTICAL ADVISORY */}
-          {criticalHazards.length > 0 && (
-            <div className="space-y-1.5">
-              <SectionLabel>Tactical Advisory</SectionLabel>
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-sm space-y-2">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div className="text-xs font-sans text-rose-900 leading-relaxed">
-                    <strong>{criticalHazards.length} iceberg{criticalHazards.length !== 1 ? 's' : ''}</strong> within
-                    5 NM of the selected route corridor. Immediate route alteration or enhanced watch is required.
-                    Execute drift and melt analysis on each CRITICAL target before departure.
-                  </div>
-                </div>
-                <div className="text-[10px] font-mono text-rose-700 border-t border-rose-200 pt-2">
-                  RECOMMENDATION: Consider Route 01 (AI Recommended Low-Ice Corridor) or execute a 15+ degree starboard
-                  course alteration to establish CPA greater than 3.5 NM from each tracked hazard.
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* DESTINATION FACILITY INFO */}
-          <div className="space-y-2">
-            <SectionLabel>Destination Facility</SectionLabel>
-            <div className="p-3 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm space-y-2">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-[#3385C6] shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#0F2130] font-sans">{destination.name}</div>
-                  {destination.officialName && destination.officialName !== destination.name && (
-                    <div className="text-[10px] text-[#68869E] italic">{destination.officialName}</div>
-                  )}
-                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                    <span className="text-[10px] font-mono text-[#3385C6] font-semibold">{destination.country || destination.operatorPrimary}</span>
-                    {destination.type && (
-                      <>
-                        <span className="text-[#CCE0F0]">&#xB7;</span>
-                        <span className="text-[10px] font-mono text-[#68869E]">{destination.type}</span>
-                      </>
-                    )}
-                    {destination.seasonality && (
-                      <>
-                        <span className="text-[#CCE0F0]">&#xB7;</span>
-                        <span className="text-[10px] font-mono text-[#68869E]">{destination.seasonality}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#CCE0F0] text-[10px] font-mono">
-                <div className="text-[#68869E]">
-                  Coordinates:&nbsp;
-                  <span className="text-[#1E3A52] font-semibold">
-                    {formatCoordinates(
-                      destination.coordinates?.[0] ?? destination.latitude,
-                      destination.coordinates?.[1] ?? destination.longitude
-                    )}
-                  </span>
-                </div>
-                {destination.elevation != null && (
-                  <div className="text-[#68869E]">
-                    Elevation:&nbsp;<span className="text-[#1E3A52] font-semibold">{destination.elevation} m</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* PANEL FOOTER */}
-        <div className="px-5 py-4 border-t border-[#CCE0F0] bg-[#F4F8FB] shrink-0 space-y-2">
-          <div className="flex items-center justify-between text-[10px] font-mono text-[#68869E] mb-1">
-            <span>Active: <span className="font-bold text-[#1E3A52]">{activeRoute?.name || '—'}</span></span>
-            <span>{activeRoute?.totalDistanceNM} NM&#xB7;{activeRoute?.estimatedTimeHours}H&#xB7;{activeRoute?.estimatedFuelMT}MT</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#3385C6] hover:bg-[#246699] text-white text-xs font-mono uppercase tracking-widest font-bold transition-colors rounded-sm shadow-xs"
-          >
-            <Compass className="w-3.5 h-3.5" />
-            Confirm Navigation Target
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full py-2 text-[10px] font-mono text-[#68869E] hover:text-[#1E3A52] transition-colors"
-          >
-            Cancel Planning
-          </button>
+      </div>
+
+      {/* ── FOOTER: START NAVIGATION ACTION ─────────────────────────────────── */}
+      <div className="px-7 py-5 border-t border-[#CCE0F0] bg-white shrink-0">
+        <div className="flex items-center justify-between text-xs text-[#68869E] font-sans mb-3">
+          <span>{activeRoute?.name}</span>
+          <span style={{ color: riskColor(overallRisk) }} className="font-semibold">
+            {overallRisk} RISK
+          </span>
         </div>
-      </motion.aside>
-    </AnimatePresence>
+
+        {/* Primary Start Navigation Button */}
+        <button
+          onClick={handleStartNavClick}
+          className={`w-full py-3.5 flex items-center justify-center gap-2.5 text-xs font-sans font-bold uppercase tracking-[0.16em] transition-all shadow-sm ${
+            isNavActive
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              : 'bg-[#0F2130] hover:bg-[#1E3A52] text-white'
+          }`}
+        >
+          <Navigation className="w-4 h-4" />
+          {isNavActive ? 'Active Navigation Engaged' : 'Start Navigation'}
+        </button>
+
+        <button
+          onClick={onClose}
+          className="w-full py-2 mt-2 text-xs font-sans text-[#68869E] hover:text-[#1E3A52] transition-colors"
+        >
+          Close Panel
+        </button>
+      </div>
+    </motion.div>
   );
 }

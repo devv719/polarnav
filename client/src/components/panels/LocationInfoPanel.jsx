@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Crosshair, Navigation, Activity, Flame, Compass, Sparkles, Loader2 } from 'lucide-react';
+import { 
+  X, 
+  ExternalLink, 
+  Crosshair, 
+  Navigation, 
+  Activity, 
+  Flame, 
+  Compass, 
+  Sparkles, 
+  Loader2,
+  Building2,
+  Ship,
+  TriangleAlert,
+  Route as RouteIcon,
+  Radio
+} from 'lucide-react';
 import { formatCoordinates } from '../../utils/formatters';
 import { navigationService } from '../../services/navigationService';
 
@@ -43,49 +58,251 @@ export default function LocationInfoPanel({
     }
   };
 
+  const getRiskColor = (risk) => {
+    const r = (risk || '').toUpperCase();
+    if (r.includes('CRITICAL') || r.includes('EXTREME')) return 'text-rose-600 bg-rose-50 border-rose-200';
+    if (r.includes('HIGH')) return 'text-amber-700 bg-amber-50 border-amber-200';
+    return 'text-[#3385C6] bg-[#E8F3FA] border-[#CCE0F0]';
+  };
+
   return (
     <AnimatePresence>
       <motion.aside
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: 28 }}
         animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="absolute top-0 right-0 bottom-0 z-[1001] w-84 max-w-full max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:w-full max-md:max-h-[65vh] bg-[#FFFFFF]/98 backdrop-blur-md border-l max-md:border-l-0 max-md:border-t border-[#CCE0F0] p-6 flex flex-col justify-between select-none font-sans shadow-xl overflow-y-auto"
+        exit={{ opacity: 0, x: 28 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute top-0 right-0 bottom-0 z-[1001] w-96 max-w-full max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:w-full max-md:max-h-[75vh] bg-[#FFFFFF] border-l max-md:border-l-0 max-md:border-t border-[#CCE0F0] p-6 flex flex-col justify-between select-none font-sans shadow-2xl overflow-y-auto"
       >
-        <div className="space-y-5">
-          {/* Header Tag + Close Icon */}
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] tracking-[0.25em] uppercase font-mono text-[#68869E] font-bold">
-              {type === 'station'
-                ? 'ANTARCTIC FACILITY'
-                : type === 'vessel'
-                ? 'RESEARCH VESSEL'
-                : type === 'iceberg'
-                ? 'ICE HAZARD'
-                : type === 'route'
-                ? 'NAVIGATION ROUTE'
-                : 'COORDINATE'}
-            </span>
+        <div className="space-y-6">
+          {/* Header Bar */}
+          <div className="flex items-center justify-between pb-3 border-b border-[#CCE0F0]">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded bg-[#F4F8FB] text-[#3385C6]">
+                {type === 'station' && <Building2 className="w-4 h-4" />}
+                {type === 'vessel' && <Ship className="w-4 h-4" />}
+                {type === 'iceberg' && <TriangleAlert className="w-4 h-4 text-rose-500" />}
+                {type === 'route' && <RouteIcon className="w-4 h-4" />}
+                {type === 'coordinate' && <Radio className="w-4 h-4" />}
+              </span>
+              <span className="text-[11px] tracking-[0.2em] uppercase font-mono text-[#68869E] font-bold">
+                {type === 'station' ? 'ANTARCTIC FACILITY' : type === 'vessel' ? 'FLEET TELEMETRY' : type === 'iceberg' ? 'ICE HAZARD TARGET' : type === 'route' ? 'NAVIGATION ROUTE' : 'PROBED SECTOR'}
+              </span>
+            </div>
             <button
               onClick={onClose}
-              className="text-xs text-[#68869E] hover:text-[#1E3A52] transition-colors p-1 leading-none rounded hover:bg-[#F4F8FB]"
-              title="Close Panel"
+              className="p-1 text-[#68869E] hover:text-[#0F2130] rounded hover:bg-[#F4F8FB] transition-colors"
+              title="Close panel"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-[1px] bg-[#CCE0F0]" />
-
-          {/* 1. STATION / FACILITY INTELLIGENCE */}
-          {type === 'station' && (
-            <div className="space-y-4">
+          {/* ══════════════════════════════════════════════════════════
+              1. ICEBERG TARGET VIEW (Redesigned Editorial Layout)
+             ══════════════════════════════════════════════════════════ */}
+          {type === 'iceberg' && (
+            <div className="space-y-5">
+              {/* Title & Type */}
               <div>
-                <h2 className="text-xl font-bold font-display text-[#0F2130] tracking-tight">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
+                  ICEBERG TARGET
+                </div>
+                <h2 className="text-2xl font-bold font-display text-[#0F2130] tracking-tight mt-0.5">
+                  {data.id}
+                </h2>
+                <div className="text-xs font-sans text-[#68869E] mt-0.5">
+                  {data.type || 'Tabular Iceberg'}
+                </div>
+              </div>
+
+              {/* Position */}
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                  POSITION
+                </div>
+                <div className="text-sm font-mono text-[#1E3A52] font-semibold">
+                  {formatCoordinates(data.latitude || data.coordinates?.[0], data.longitude || data.coordinates?.[1])}
+                </div>
+                <div className="text-[11px] text-[#68869E] font-mono">
+                  Observed {data.lastObserved || '2h ago'} via Sentinel-1 SAR
+                </div>
+              </div>
+
+              {/* Risk Level */}
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                  RISK ASSESSMENT
+                </div>
+                <div>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-bold border uppercase tracking-wider ${getRiskColor(data.riskScore)}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    {data.riskScore || 'HIGH RISK'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Dimensions */}
+              {data.lengthKm && (
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                    DIMENSIONS
+                  </div>
+                  <div className="text-xs font-mono text-[#1E3A52] font-semibold">
+                    {data.lengthKm} × {data.widthKm} km &nbsp;•&nbsp; <span className="text-[#3385C6]">{(data.lengthKm * data.widthKm).toFixed(2)} km²</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ── DRIFT & MELT ANALYSIS SECTION ───────────────── */}
+              <div className="pt-4 border-t border-[#CCE0F0] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] uppercase tracking-wider text-[#0F2130] font-sans font-bold flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-[#3385C6]" />
+                    DRIFT & MELT ANALYSIS
+                  </div>
+                  <span className="text-[10px] font-mono text-[#68869E]">
+                    FORECAST: {etaHours}H
+                  </span>
+                </div>
+
+                {/* Forecast Window Slider */}
+                <div className="space-y-1.5 bg-[#F4F8FB] p-3 rounded-sm border border-[#CCE0F0]">
+                  <div className="flex justify-between text-xs font-sans text-[#1E3A52]">
+                    <span className="text-[#68869E]">Forecast Horizon:</span>
+                    <span className="font-mono font-bold text-[#3385C6]">{etaHours} Hours</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="6"
+                    max="72"
+                    step="6"
+                    value={etaHours}
+                    onChange={(e) => setEtaHours(Number(e.target.value))}
+                    className="w-full h-1.5 bg-[#CCE0F0] rounded-lg appearance-none cursor-pointer accent-[#3385C6]"
+                  />
+                  <div className="flex justify-between text-[9px] font-mono text-[#68869E]">
+                    <span>6h</span>
+                    <span>24h</span>
+                    <span>48h</span>
+                    <span>72h</span>
+                  </div>
+                </div>
+
+                {/* Run Analysis Trigger */}
+                <button
+                  onClick={handleRunAnalysis}
+                  disabled={analyzing}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#3385C6] hover:bg-[#246699] disabled:bg-[#9CBED8] text-white rounded-sm text-xs font-mono uppercase tracking-wider font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Computing Physics...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Run Drift & Melt Analysis
+                    </>
+                  )}
+                </button>
+
+                {/* Analytical Results */}
+                {analysisResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4 pt-2 font-sans"
+                  >
+                    {/* Thermodynamic Decay Card */}
+                    <div className="p-3.5 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-[#0F2130]">
+                        <span className="flex items-center gap-1.5">
+                          <Flame className="w-3.5 h-3.5 text-amber-500" />
+                          Thermodynamic Decay
+                        </span>
+                        <span className={`text-[10px] font-mono font-bold ${
+                          analysisResult.physics_metrics.thermodynamics.will_melt_before_vessel_arrival 
+                            ? 'text-emerald-700' 
+                            : 'text-rose-700'
+                        }`}>
+                          {analysisResult.physics_metrics.thermodynamics.will_melt_before_vessel_arrival 
+                            ? 'WILL FULLY MELT' 
+                            : 'PERSISTENT ICE'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 text-[#68869E]">
+                        <div>Melt Rate: <b className="text-[#1E3A52] block">{analysisResult.physics_metrics.thermodynamics.melt_rate_m_per_day} m/day</b></div>
+                        <div>Area Loss: <b className="text-amber-700 block">{analysisResult.physics_metrics.thermodynamics.area_loss_percentage}%</b></div>
+                        <div>Proj Area: <b className="text-[#1E3A52] block">{analysisResult.physics_metrics.thermodynamics.projected_area_km2} km²</b></div>
+                        <div>ETA Window: <b className="text-[#1E3A52] block">{etaHours} Hours</b></div>
+                      </div>
+                    </div>
+
+                    {/* ACC Drift Vector Card */}
+                    <div className="p-3.5 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-[#0F2130]">
+                        <span className="flex items-center gap-1.5">
+                          <Compass className="w-3.5 h-3.5 text-[#3385C6]" />
+                          ACC Drift Vector
+                        </span>
+                        <span className="text-[10px] font-mono text-[#3385C6] font-bold">
+                          {analysisResult.physics_metrics.trajectory.drift_vector.drift_distance_nm} NM
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-mono text-[#68869E]">
+                        HDG {analysisResult.physics_metrics.trajectory.drift_vector.heading_degrees}°T @ {analysisResult.physics_metrics.trajectory.drift_vector.speed_knots} kts
+                      </div>
+                      <div className="text-[11px] font-mono text-[#1E3A52] font-medium pt-0.5">
+                        Proj Coord: {formatCoordinates(
+                          analysisResult.physics_metrics.trajectory.projected_position.lat,
+                          analysisResult.physics_metrics.trajectory.projected_position.lon
+                        )}
+                      </div>
+                    </div>
+
+                    {/* AI Risk Advisory */}
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[10px] uppercase font-mono tracking-widest text-[#0F2130] font-bold">
+                          AI RISK ADVISORY
+                        </div>
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 bg-[#E8F3FA] text-[#3385C6] rounded border border-[#CCE0F0] font-semibold">
+                          {analysisResult.advisory_report.engine}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#1E3A52] leading-relaxed bg-[#FFFFFF] p-3 rounded-sm border border-[#CCE0F0]">
+                        {analysisResult.advisory_report.collision_risk_assessment}
+                      </p>
+                    </div>
+
+                    {/* Tactical Alteration Directive */}
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] uppercase font-mono tracking-widest text-[#3385C6] font-bold">
+                        TACTICAL ALTERATION
+                      </div>
+                      <div className="p-3 bg-[#E8F3FA]/70 border border-[#CCE0F0] rounded-sm text-xs text-[#0F2130] font-medium leading-relaxed">
+                        {analysisResult.advisory_report.tactical_recommendations?.action || analysisResult.advisory_report.tactical_recommendations}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
+              2. FACILITY / STATION VIEW
+             ══════════════════════════════════════════════════════════ */}
+          {type === 'station' && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-2xl font-bold font-display text-[#0F2130] tracking-tight">
                   {data.name}
                 </h2>
                 {data.officialName && data.officialName !== data.name && (
-                  <p className="text-xs text-[#68869E] mt-0.5 font-sans italic">
+                  <p className="text-xs text-[#68869E] mt-0.5 italic">
                     {data.officialName}
                   </p>
                 )}
@@ -108,77 +325,56 @@ export default function LocationInfoPanel({
                   </span>
                 )}
                 {data.status && (
-                  <span
-                    className={`px-2 py-0.5 rounded-sm border uppercase font-semibold ${
-                      data.status.toLowerCase().includes('open')
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                        : 'bg-amber-50 text-amber-800 border-amber-300'
-                    }`}
-                  >
+                  <span className="px-2 py-0.5 rounded-sm border uppercase font-semibold bg-emerald-50 text-emerald-800 border-emerald-200">
                     {data.status}
                   </span>
                 )}
               </div>
 
               {/* Coordinates */}
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                  Location
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                  COORDINATES
                 </div>
-                <div className="text-sm font-mono text-[#1E3A52] mt-1 space-y-0.5 font-medium">
-                  <div>
-                    {formatCoordinates(data.coordinates?.[0] || data.latitude, data.coordinates?.[1] || data.longitude)}
+                <div className="text-sm font-mono text-[#1E3A52] font-semibold">
+                  {formatCoordinates(data.coordinates?.[0] || data.latitude, data.coordinates?.[1] || data.longitude)}
+                </div>
+                {data.region && (
+                  <div className="text-xs text-[#68869E]">
+                    Region: {data.region}
                   </div>
-                  {(data.latitudeDDM || data.longitudeDDM) && (
-                    <div className="text-[10px] text-[#68869E]">
-                      {data.latitudeDDM} {data.longitudeDDM}
-                    </div>
-                  )}
-                  {data.region && (
-                    <div className="text-[10px] text-[#68869E]">
-                      Region: {data.region}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Technical Specifications */}
-              <div className="grid grid-cols-2 gap-3 font-mono text-xs pt-1 border-t border-[#CCE0F0]">
-                {data.elevation !== null && data.elevation !== undefined && (
+              <div className="grid grid-cols-2 gap-3 font-mono text-xs pt-2 border-t border-[#CCE0F0]">
+                {data.elevation !== null && (
                   <div>
                     <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-semibold">Elevation</div>
-                    <div className="text-xs font-semibold text-[#1E3A52] mt-0.5">
-                      {data.elevation} m {data.elevationDatum ? `(${data.elevationDatum})` : ''}
-                    </div>
+                    <div className="text-xs font-bold text-[#1E3A52] mt-0.5">{data.elevation} m</div>
                   </div>
                 )}
-                {data.peakPopulation !== null && data.peakPopulation !== undefined && (
+                {data.peakPopulation !== null && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-semibold">Peak Population</div>
-                    <div className="text-xs font-semibold text-[#1E3A52] mt-0.5">
-                      {data.peakPopulation} persons
-                    </div>
+                    <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-semibold">Peak Capacity</div>
+                    <div className="text-xs font-bold text-[#1E3A52] mt-0.5">{data.peakPopulation} persons</div>
                   </div>
                 )}
                 {data.yearEstablished && (
                   <div>
                     <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-semibold">Established</div>
-                    <div className="text-xs font-semibold text-[#1E3A52] mt-0.5">
-                      {data.yearEstablished}
-                    </div>
+                    <div className="text-xs font-bold text-[#1E3A52] mt-0.5">{data.yearEstablished}</div>
                   </div>
                 )}
                 {data.powerSupply && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-semibold">Power Supply</div>
-                    <div className="text-xs font-semibold text-[#1E3A52] mt-0.5 truncate" title={data.powerSupply}>
-                      {data.powerSupply}
-                    </div>
+                    <div className="text-[9px] uppercase tracking-widest text-[#68869E] font-semibold">Power</div>
+                    <div className="text-xs font-bold text-[#1E3A52] mt-0.5 truncate">{data.powerSupply}</div>
                   </div>
                 )}
               </div>
 
-              {/* Photo / Webcam External Links if present */}
+              {/* Links */}
               {(data.photoUrl || data.webcamUrl) && (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {data.photoUrl && (
@@ -186,7 +382,7 @@ export default function LocationInfoPanel({
                       href={data.photoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-mono text-[#3385C6] hover:underline font-semibold"
+                      className="inline-flex items-center gap-1 text-xs font-sans text-[#3385C6] hover:underline font-semibold"
                     >
                       <ExternalLink className="w-3 h-3" /> Photo Source
                     </a>
@@ -196,7 +392,7 @@ export default function LocationInfoPanel({
                       href={data.webcamUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-700 hover:underline font-semibold"
+                      className="inline-flex items-center gap-1 text-xs font-sans text-emerald-700 hover:underline font-semibold"
                     >
                       <ExternalLink className="w-3 h-3" /> Live Webcam
                     </a>
@@ -204,12 +400,12 @@ export default function LocationInfoPanel({
                 </div>
               )}
 
-              {/* Actions: Zoom to Station */}
+              {/* Actions */}
               <div className="pt-2 space-y-2">
                 {onZoomTo && (
                   <button
                     onClick={() => onZoomTo(data.coordinates || [data.latitude, data.longitude])}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-[#3385C6] hover:bg-[#246699] text-white rounded-sm text-xs font-mono uppercase tracking-wider transition-colors font-bold shadow-xs"
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-[#3385C6] hover:bg-[#246699] text-white rounded-sm text-xs font-mono uppercase tracking-wider font-bold transition-colors shadow-xs"
                   >
                     <Crosshair className="w-3.5 h-3.5" />
                     Zoom To Facility
@@ -218,7 +414,7 @@ export default function LocationInfoPanel({
                 {onSetDestination && (
                   <button
                     onClick={() => onSetDestination(data)}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-[#F4F8FB] hover:bg-[#E8F3FA] text-[#1E3A52] hover:text-[#0F2130] border border-[#CCE0F0] rounded-sm text-[11px] font-mono uppercase tracking-wider transition-colors font-semibold"
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-[#F4F8FB] hover:bg-[#E8F3FA] text-[#1E3A52] border border-[#CCE0F0] rounded-sm text-xs font-mono uppercase tracking-wider font-semibold transition-colors"
                   >
                     <Navigation className="w-3 h-3 text-[#3385C6]" />
                     Set Nav Target
@@ -228,286 +424,117 @@ export default function LocationInfoPanel({
             </div>
           )}
 
-          {/* 2. VESSEL */}
+          {/* ══════════════════════════════════════════════════════════
+              3. VESSEL VIEW
+             ══════════════════════════════════════════════════════════ */}
           {type === 'vessel' && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold font-display text-[#0F2130] tracking-tight">
+                <h2 className="text-2xl font-bold font-display text-[#0F2130] tracking-tight">
                   {data.name}
                 </h2>
-                <p className="text-xs text-[#68869E] mt-1 font-mono">
-                  {data.iceClass || 'Research vessel'}
-                </p>
+                <div className="text-xs font-mono text-[#68869E] mt-0.5">
+                  {data.iceClass || 'Polar Research Vessel'}
+                </div>
               </div>
 
-              <div className="space-y-1 font-mono text-sm">
-                <div className="text-[#1E3A52] font-semibold">
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                  POSITION & SPEED
+                </div>
+                <div className="text-sm font-mono text-[#1E3A52] font-semibold">
                   {formatCoordinates(data.coordinates?.[0] || data.latitude, data.coordinates?.[1] || data.longitude)}
                 </div>
-                <div className="text-[#3385C6] font-bold text-xs">
-                  {data.speedKnots} KT • HDG {data.heading}°
+                <div className="text-xs font-mono text-[#3385C6] font-bold">
+                  {data.speedKnots} KTS &nbsp;•&nbsp; HEADING {data.heading}°T
                 </div>
               </div>
 
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                  Destination
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                  DESTINATION
                 </div>
-                <div className="text-sm font-semibold text-[#0F2130] mt-1">
+                <div className="text-sm font-sans font-bold text-[#0F2130]">
                   {data.destination || 'BHARATI STATION'}
                 </div>
               </div>
             </div>
           )}
 
-          {/* 3. ICEBERG */}
-          {type === 'iceberg' && (
-            <div className="space-y-4">
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                  ICEBERG
-                </div>
-                <h2 className="text-xl font-bold font-display text-[#0F2130] tracking-tight mt-0.5">
-                  {data.id}
-                </h2>
-                <p className="text-xs text-[#68869E] mt-1 font-mono">
-                  {data.type || 'Tabular Iceberg'}
-                </p>
-              </div>
-
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                  POSITION
-                </div>
-                <div className="font-mono text-sm text-[#1E3A52] mt-1 font-semibold">
-                  {formatCoordinates(data.latitude || data.coordinates?.[0], data.longitude || data.coordinates?.[1])}
-                </div>
-                <div className="text-xs text-[#68869E] font-mono mt-0.5">
-                  Observed {data.lastObserved || '2h ago'}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                  RISK ASSESSMENT
-                </div>
-                <div className="text-sm font-semibold text-[#1E3A52] mt-1 flex items-center gap-2 font-mono">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      data.riskScore === 'CRITICAL' || data.riskScore === 'EXTREME'
-                        ? 'bg-rose-500'
-                        : data.riskScore === 'HIGH'
-                        ? 'bg-amber-500'
-                        : 'bg-[#3385C6]'
-                    }`}
-                  />
-                  <span>{data.riskScore || 'Moderate'} Risk</span>
-                </div>
-              </div>
-
-              {data.lengthKm && (
-                <div>
-                  <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                    DIMENSIONS
-                  </div>
-                  <div className="text-xs font-mono text-[#1E3A52] mt-1 font-semibold">
-                    {data.lengthKm} × {data.widthKm} km ({(data.lengthKm * data.widthKm).toFixed(2)} km²)
-                  </div>
-                </div>
-              )}
-
-              {/* Interactive AI Physics & Drift Engine */}
-              <div className="pt-2 border-t border-[#CCE0F0] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-widest text-[#3385C6] font-mono font-bold flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5 text-[#3385C6]" />
-                    DRIFT & MELT ENGINE
-                  </span>
-                  <span className="text-[9px] font-mono text-[#68869E]">ETA: {etaHours}h</span>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-mono text-[#68869E]">
-                    <span>Forecast Window</span>
-                    <span>{etaHours} Hours</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="6"
-                    max="72"
-                    step="6"
-                    value={etaHours}
-                    onChange={(e) => setEtaHours(Number(e.target.value))}
-                    className="w-full h-1.5 bg-[#E8F3FA] rounded-lg appearance-none cursor-pointer accent-[#3385C6]"
-                  />
-                </div>
-
-                <button
-                  onClick={handleRunAnalysis}
-                  disabled={analyzing}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-[#3385C6] hover:bg-[#246699] disabled:bg-[#9CBED8] text-white rounded-sm text-xs font-mono uppercase tracking-wider transition-colors font-bold shadow-xs"
-                >
-                  {analyzing ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Computing Physics...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
-                      Run Drift & Melt Analysis
-                    </>
-                  )}
-                </button>
-
-                {/* Structured Analysis Results */}
-                {analysisResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm space-y-3 font-mono text-xs"
-                  >
-                    {/* Thermodynamics */}
-                    <div className="space-y-1 border-b border-[#CCE0F0] pb-2">
-                      <div className="flex items-center justify-between text-[#1E3A52] font-semibold text-[11px]">
-                        <span className="flex items-center gap-1">
-                          <Flame className="w-3 h-3 text-amber-500" /> Thermodynamic Decay
-                        </span>
-                        <span className={analysisResult.physics_metrics.thermodynamics.will_melt_before_vessel_arrival ? 'text-emerald-600' : 'text-rose-600'}>
-                          {analysisResult.physics_metrics.thermodynamics.will_melt_before_vessel_arrival ? 'WILL FULLY MELT' : 'PERSISTENT ICE'}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-[#68869E] grid grid-cols-2 gap-1 pt-1">
-                        <div>Melt Rate: <b className="text-[#1E3A52]">{analysisResult.physics_metrics.thermodynamics.melt_rate_m_per_day} m/d</b></div>
-                        <div>Area Loss: <b className="text-amber-600">{analysisResult.physics_metrics.thermodynamics.area_loss_percentage}%</b></div>
-                        <div>Proj. Area: <b className="text-[#1E3A52]">{analysisResult.physics_metrics.thermodynamics.projected_area_km2} km²</b></div>
-                        <div>ETA: <b className="text-[#1E3A52]">{etaHours}h</b></div>
-                      </div>
-                    </div>
-
-                    {/* Trajectory */}
-                    <div className="space-y-1 border-b border-[#CCE0F0] pb-2">
-                      <div className="flex items-center justify-between text-[#1E3A52] font-semibold text-[11px]">
-                        <span className="flex items-center gap-1">
-                          <Compass className="w-3 h-3 text-[#3385C6]" /> ACC Drift Vector
-                        </span>
-                        <span className="text-[#3385C6] font-bold">
-                          {analysisResult.physics_metrics.trajectory.drift_vector.drift_distance_nm} NM
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-[#68869E]">
-                        HDG {analysisResult.physics_metrics.trajectory.drift_vector.heading_degrees}°T @ {analysisResult.physics_metrics.trajectory.drift_vector.speed_knots} kts
-                      </div>
-                      <div className="text-[10px] text-[#1E3A52] font-semibold">
-                        Proj: {formatCoordinates(analysisResult.physics_metrics.trajectory.projected_position.lat, analysisResult.physics_metrics.trajectory.projected_position.lon)}
-                      </div>
-                    </div>
-
-                    {/* LLM Advisory */}
-                    <div className="space-y-1.5 pt-0.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold text-[#0F2130] tracking-wider">
-                          AI RISK ADVISORY
-                        </span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#E8F3FA] text-[#3385C6] font-bold border border-[#CCE0F0]">
-                          {analysisResult.advisory_report.engine}
-                        </span>
-                      </div>
-                      <p className="text-[11px] leading-relaxed text-[#1E3A52] font-sans">
-                        {analysisResult.advisory_report.collision_risk_assessment}
-                      </p>
-                      <div className="p-2 bg-white border border-[#CCE0F0] rounded text-[10px] text-[#0F2130] font-sans font-medium">
-                        <b className="text-[#3385C6] font-mono uppercase block text-[9px] mb-0.5">Tactical Alteration</b>
-                        {analysisResult.advisory_report.tactical_recommendations?.action || analysisResult.advisory_report.tactical_recommendations}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 4. ROUTE */}
+          {/* ══════════════════════════════════════════════════════════
+              4. ROUTE VIEW
+             ══════════════════════════════════════════════════════════ */}
           {type === 'route' && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-bold font-display text-[#0F2130] tracking-tight">
+                <h2 className="text-xl font-bold font-display text-[#0F2130] tracking-tight">
                   {data.name || 'RECOMMENDED ROUTE'}
                 </h2>
-                <p className="text-xs text-[#68869E] mt-1 font-mono">
+                <div className="text-xs font-mono text-[#68869E] mt-0.5">
                   {data.isRecommended ? 'AI Optimal Polar Path' : 'Direct Corridor'}
-                </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 font-mono">
                 <div>
                   <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-semibold">Distance</div>
-                  <div className="text-sm font-bold text-[#1E3A52] mt-0.5">{data.totalDistanceNM} NM</div>
+                  <div className="text-base font-bold text-[#1E3A52] mt-0.5">{data.totalDistanceNM} NM</div>
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-semibold">Est. Time</div>
-                  <div className="text-sm font-bold text-[#3385C6] mt-0.5">{data.estimatedTimeHours} H</div>
+                  <div className="text-base font-bold text-[#3385C6] mt-0.5">{data.estimatedTimeHours} H</div>
                 </div>
               </div>
 
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                  Ice Risk Level
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-bold">
+                  ICE HAZARD CATEGORY
                 </div>
-                <div className="text-sm font-bold text-[#1E3A52] mt-1 font-mono">
+                <div className="text-sm font-mono font-bold text-[#1E3A52]">
                   {data.riskCategory ? data.riskCategory.toUpperCase() : 'LOW RISK'}
                 </div>
               </div>
-
-              {data.estimatedFuelMT && (
-                <div>
-                  <div className="text-[10px] uppercase tracking-widest text-[#68869E] font-mono font-semibold">
-                    Fuel Consumption
-                  </div>
-                  <div className="text-xs font-mono text-[#68869E] mt-1 font-semibold">
-                    {data.estimatedFuelMT} MT
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
-          {/* 5. COORDINATE PROBE */}
+          {/* ══════════════════════════════════════════════════════════
+              5. COORDINATE PROBE VIEW
+             ══════════════════════════════════════════════════════════ */}
           {type === 'coordinate' && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-bold font-display text-[#0F2130] tracking-tight">
+                <h2 className="text-xl font-bold font-display text-[#0F2130] tracking-tight">
                   PROBED SECTOR
                 </h2>
-                <p className="text-xs text-[#68869E] mt-1 font-mono">
-                  {data.name || 'Antarctic Waters'}
-                </p>
+                <div className="text-xs font-mono text-[#68869E] mt-0.5">
+                  Antarctic Marine Basin
+                </div>
               </div>
 
               <div className="font-mono text-sm text-[#1E3A52] font-semibold">
                 {formatCoordinates(data.coordinates?.[0] || data.latitude, data.coordinates?.[1] || data.longitude)}
               </div>
 
-              <div className="space-y-2 font-mono text-xs">
+              <div className="space-y-2 font-mono text-xs pt-2 border-t border-[#CCE0F0]">
                 <div className="flex justify-between text-[#68869E]">
-                  <span>Sea Ice:</span>
-                  <span className="text-[#1E3A52] font-semibold">{data.seaIceConcentration || 0}%</span>
+                  <span>Sea Ice Concentration:</span>
+                  <span className="text-[#1E3A52] font-bold">{data.seaIceConcentration || 0}%</span>
                 </div>
                 <div className="flex justify-between text-[#68869E]">
-                  <span>Temperature:</span>
-                  <span className="text-[#1E3A52] font-semibold">{data.temperature || -10}°C</span>
+                  <span>Surface Temperature:</span>
+                  <span className="text-[#1E3A52] font-bold">{data.temperature || -10}°C</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Clean Close Button */}
+        {/* Bottom Close Button */}
         <button
           onClick={onClose}
           className="w-full py-2.5 mt-6 bg-[#F4F8FB] hover:bg-[#E8F3FA] border border-[#CCE0F0] text-xs font-mono uppercase tracking-[0.16em] text-[#1E3A52] rounded-sm transition-colors font-semibold"
         >
-          Close
+          Close Panel
         </button>
       </motion.aside>
     </AnimatePresence>

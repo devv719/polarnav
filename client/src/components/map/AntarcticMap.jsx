@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, useMap, useMapEvents } from 'react-leaflet';
 import MapBaseLayer from './MapBaseLayer';
 import SatelliteLayer from './SatelliteLayer';
@@ -9,8 +9,8 @@ import RiskZoneLayer from './RiskZoneLayer';
 import StationMarker from './StationMarker';
 import MapLegend from './MapLegend';
 import MapControls from './MapControls';
-import FloatingLayersControl from '../controls/FloatingLayersControl';
-import StationSearchFilter from '../controls/StationSearchFilter';
+import MapTopToolbar from '../controls/MapTopToolbar';
+import MapSearchOverlay from '../controls/MapSearchOverlay';
 import { ANTARCTIC_BASE_VIEW } from '../../data/antarcticDemoData';
 
 function MapViewController({ center, zoom }) {
@@ -75,33 +75,59 @@ export default function AntarcticMap({
   onResetOverview,
   stats
 }) {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Global hotkey '/' or 'Ctrl+K' to open search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '/' && !isSearchOpen && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      } else if (e.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen]);
+
   return (
     <div className="relative w-full h-full bg-[#F4F8FB] overflow-hidden">
-      {/* 1. Floating Left Layers Control with Basemaps */}
-      <FloatingLayersControl
+      {/* 1. Compact Integrated GIS Top Toolbar */}
+      <MapTopToolbar
         layers={layers}
         onToggleLayer={onToggleLayer}
         baseLayer={baseLayer}
         setBaseLayer={setBaseLayer}
+        stations={stations}
+        filteredStations={filteredStations}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCountry={selectedCountry}
+        setSelectedCountry={setSelectedCountry}
+        selectedSeasonality={selectedSeasonality}
+        setSelectedSeasonality={setSelectedSeasonality}
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onSelectStation={onSelectStation}
       />
 
-      {/* 2. Compact Station Search & Dynamic Filters */}
-      {layers.stations && (
-        <StationSearchFilter
-          stations={stations}
-          filteredStations={filteredStations}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCountry={selectedCountry}
-          setSelectedCountry={setSelectedCountry}
-          selectedSeasonality={selectedSeasonality}
-          setSelectedSeasonality={setSelectedSeasonality}
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          onSelectStation={onSelectStation}
-          stats={stats}
-        />
-      )}
+      {/* 2. Prominent Full-Featured GIS Search Overlay */}
+      <MapSearchOverlay
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        stations={stations}
+        icebergs={icebergs}
+        vessel={vessel}
+        onSelectStation={onSelectStation}
+        onSelectIceberg={onSelectIceberg}
+        onSelectVessel={onSelectVessel}
+        onZoomTo={onResetOverview ? (coords) => onResetOverview(coords) : undefined}
+      />
 
       {/* 3. Interactive Map Container */}
       <MapContainer

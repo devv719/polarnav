@@ -117,5 +117,110 @@ export const navigationService = {
         ? 'Caution: Reduce Speed to <8 kts and Activate Searchlights'
         : 'Open Nav Corridor: Follow Approved Low-Ice Waypoints'
     });
+  },
+
+  /**
+   * Run Iceberg Thermodynamic Melt & ACC Drift Physics + LLM Risk Analysis
+   * Calls POST /api/v1/icebergs/analyze-target
+   */
+  async analyzeIcebergTarget({
+    iceberg_id,
+    current_lat,
+    current_lon,
+    initial_area_km2 = 1.0,
+    ship_eta_hours = 24.0,
+    water_temp_c = 0.5,
+    ice_temp_c = -4.0
+  }) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/icebergs/analyze-target`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          iceberg_id,
+          current_lat,
+          current_lon,
+          initial_area_km2,
+          ship_eta_hours,
+          water_temp_c,
+          ice_temp_c
+        })
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (err) {
+      console.warn('Backend API unreachable, using client-side physics fallback:', err);
+    }
+
+    // Client-side fallback computation matching backend physics formula
+    const lengthM = Math.sqrt(initial_area_km2 * 1e6);
+    const deltaT = Math.max(0.05, water_temp_c - ice_temp_c);
+    const meltRateMPerDay = 0.058 * Math.pow(deltaT, 0.8) * Math.pow(Math.max(lengthM, 1), -0.2);
+    const timeDays = ship_eta_hours / 24.0;
+    const radialErosionM = meltRateMPerDay * timeDays;
+    const projectedLengthM = Math.max(0, lengthM - (2 * radialErosionM));
+    const projectedAreaKm2 = Math.pow(projectedLengthM, 2) / 1e6;
+    const areaLossKm2 = Math.max(0, initial_area_km2 - projectedAreaKm2);
+    const areaLossPct = (areaLossKm2 / initial_area_km2) * 100;
+    const willMelt = projectedAreaKm2 <= 0.0001;
+
+    // ACC Drift: 0.8 knots @ 055°T
+    const distanceNm = 0.8 * ship_eta_hours;
+    const headingRad = (55.0 * Math.PI) / 180;
+    const dLat = (distanceNm * Math.cos(headingRad)) / 60.0;
+    const meanLatRad = ((current_lat + (current_lat + dLat)) / 2.0) * (Math.PI / 180);
+    const dLon = (distanceNm * Math.sin(headingRad)) / (60.0 * Math.max(0.01, Math.cos(meanLatRad)));
+
+    return {
+      success: true,
+      iceberg_id,
+      ship_eta_hours,
+      physics_metrics: {
+        iceberg_id,
+        classification: initial_area_km2 < 0.0001 ? 'Growler' : initial_area_km2 < 0.05 ? 'Bergy Bit' : 'Tabular Iceberg',
+        ship_eta_hours,
+        thermodynamics: {
+          initial_area_km2: Number(initial_area_km2.toFixed(4)),
+          projected_area_km2: Number(projectedAreaKm2.toFixed(4)),
+          area_loss_km2: Number(areaLossKm2.toFixed(4)),
+          area_loss_percentage: Number(areaLossPct.toFixed(2)),
+          melt_rate_m_per_day: Number(meltRateMPerDay.toFixed(4)),
+          will_melt_before_vessel_arrival: willMelt
+        },
+        trajectory: {
+          current_position: { lat: current_lat, lon: current_lon },
+          projected_position: {
+            lat: Number((current_lat + dLat).toFixed(5)),
+            lon: Number((current_lon + dLon).toFixed(5))
+          },
+          drift_vector: {
+            speed_knots: 0.8,
+            heading_degrees: 55.0,
+            drift_distance_nm: Number(distanceNm.toFixed(2)),
+            drift_distance_km: Number((distanceNm * 1.852).toFixed(2))
+          }
+        },
+        will_melt_before_vessel_arrival: willMelt
+      },
+      advisory_report: {
+        iceberg_id,
+        classification: initial_area_km2 < 0.05 ? 'Bergy Bit' : 'Tabular Iceberg',
+        risk_level: initial_area_km2 > 0.5 ? 'CRITICAL' : 'HIGH',
+        collision_risk_assessment: willMelt 
+          ? `Target ${iceberg_id} exhibits complete thermodynamic ablation (${areaLossPct.toFixed(1)}% loss) prior to ETA.`
+          : `Target maintains mass with projected area ${projectedAreaKm2.toFixed(4)} km². ACC drift along 055°T intersects tactical corridor.`,
+        tactical_recommendations: {
+          action: willMelt
+            ? 'Maintain planned track with passive watch.'
+            : 'Execute 15° evasive detour to Starboard. Establish 3.5 NM CPA.',
+          min_cpa_nautical_miles: willMelt ? 0.5 : 3.5,
+          course_alteration_degrees: willMelt ? 0.0 : 15.0
+        },
+        executive_report: `POLARNAV AI BRIDGE ADVISORY // TARGET: ${iceberg_id}\nDRIFT: ${distanceNm.toFixed(1)} NM @ 055°T\nTACTICAL DIRECTIVE: Maintain minimum CPA of ${willMelt ? '0.5' : '3.5'} NM.`,
+        engine: 'PolarNav-Client-Fallback'
+      }
+    };
   }
 };

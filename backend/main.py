@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from config import settings
 from services.iceberg_physics import analyze_iceberg_target
 from services.iceberg_llm import generate_iceberg_risk_report
 from services.ais_service import ais_manager, plan_vessel_route_service
@@ -31,10 +32,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for local and production frontends
+# Enable CORS dynamically from environment configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -156,4 +157,4 @@ def analyze_iceberg(payload: IcebergAnalysisRequest) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT)

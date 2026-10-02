@@ -9,6 +9,8 @@ import json
 import logging
 from typing import Dict, Any, Optional
 
+from config import settings
+
 logger = logging.getLogger("polarnav.llm")
 
 
@@ -114,8 +116,8 @@ def generate_iceberg_risk_report(physics_metrics: Dict[str, Any]) -> Dict[str, A
     or falls back to the deterministic Polar Nav rule engine.
     """
     # Attempt Ollama / LangChain integration if reachable
-    ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-    model_name = os.environ.get("POLARNAV_LLM_MODEL", "llama3")
+    ollama_host = settings.OLLAMA_HOST
+    model_name = settings.POLARNAV_LLM_MODEL
     
     try:
         import urllib.request

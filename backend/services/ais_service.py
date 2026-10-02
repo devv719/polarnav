@@ -12,13 +12,11 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 import websockets
 
+from config import settings
 from services.route_engine import STATION_COORDINATES, plan_antarc_route
 
 logger = logging.getLogger("polarnav.ais")
 logging.basicConfig(level=logging.INFO)
-
-AISSTREAM_URL = "wss://stream.aisstream.io/v0/stream"
-AISSTREAM_API_KEY = "944a9e5f3596077b0f343c54b60956d9a32321ed"
 
 # Antarctic & Southern Ocean Bounding Boxes (lat <= -50 deg S covers Drake Passage, Southern Ocean, Ross/Weddell/Prydz)
 SOUTHERN_OCEAN_BOUNDS = [[[-90, -180], [-50, 180]]]
@@ -214,8 +212,17 @@ class AISManager:
 
     async def _ais_consumer_loop(self):
         """Persistent reconnecting loop for AISStream WebSocket."""
+        api_key = settings.AISSTREAM_API_KEY
+        ws_url = settings.AISSTREAM_WS_URL
+        reconnect_delay = settings.AISSTREAM_RECONNECT_DELAY
+
+        if not api_key:
+            logger.warning("AISSTREAM_API_KEY is not configured in environment. Operating with cached polar fleet.")
+            self.stats["status"] = "unconfigured_api_key"
+            return
+
         subscription_msg = {
-            "APIKey": AISSTREAM_API_KEY,
+            "APIKey": api_key,
             "BoundingBoxes": SOUTHERN_OCEAN_BOUNDS,
             "FilterMessageTypes": ["PositionReport", "ShipStaticData", "StandardSearchAndRescueAircraftReport"]
         }
@@ -226,7 +233,7 @@ class AISManager:
                 logger.info("Connecting to AISStream WebSocket...")
                 
                 async with websockets.connect(
-                    AISSTREAM_URL,
+                    ws_url,
                     ping_interval=20,
                     ping_timeout=20,
                     close_timeout=10
@@ -246,8 +253,8 @@ class AISManager:
 
             except (websockets.ConnectionClosed, asyncio.CancelledError, Exception) as e:
                 self.stats["status"] = "reconnecting"
-                logger.warning(f"AISStream WebSocket disconnected ({e}). Reconnecting in 5s...")
-                await asyncio.sleep(5)
+                logger.warning(f"AISStream WebSocket disconnected ({e}). Reconnecting in {reconnect_delay}s...")
+                await asyncio.sleep(reconnect_delay)
 
     async def _process_ais_packet(self, packet: Dict[str, Any]):
         """Ingests and updates vessel state from AIS JSON frame."""

@@ -54,6 +54,18 @@
     cursor: default;
   }
 
+  /* Hide default cursor on desktop when custom cursor is active */
+  @media (hover: hover) and (pointer: fine) {
+    body.custom-cursor-active,
+    body.custom-cursor-active a,
+    body.custom-cursor-active button,
+    body.custom-cursor-active input,
+    body.custom-cursor-active [role="button"],
+    body.custom-cursor-active .cursor-pointer {
+      cursor: none !important;
+    }
+  }
+
   /* Minimal scrollbar */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: #F4F8FB; }

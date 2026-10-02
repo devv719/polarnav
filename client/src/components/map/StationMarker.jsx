@@ -20,14 +20,14 @@ export default function StationMarker({ station, isSelected, onSelect }) {
       // Solid marker
       markerHtml = `
         <div class="relative flex items-center justify-center cursor-pointer group" style="width: 24px; height: 24px;">
-          <div class="w-3.5 h-3.5 rounded-sm ${
+          <div class="w-3 h-3 rounded-sm ${
             isSelected 
-              ? 'bg-[#38bdf8] ring-2 ring-white shadow-[0_0_8px_#38bdf8]' 
+              ? 'bg-[#00e5ff] ring-2 ring-white shadow-[0_0_8px_#00e5ff]' 
               : isIndian
-              ? 'bg-[#38bdf8] border border-white/80 shadow'
-              : 'bg-[#F2F4F5] border border-black/40 shadow'
+              ? 'bg-[#00e5ff] border border-white/80 shadow'
+              : 'bg-[#F3F1EB] border border-black/40 shadow'
           } flex items-center justify-center transition-transform group-hover:scale-125">
-            <div class="w-1 h-1 bg-[#071018] rounded-full"></div>
+            <div class="w-1 h-1 bg-[#050505] rounded-full"></div>
           </div>
         </div>
       `;
@@ -35,14 +35,14 @@ export default function StationMarker({ station, isSelected, onSelect }) {
       // Seasonal outlined marker
       markerHtml = `
         <div class="relative flex items-center justify-center cursor-pointer group" style="width: 24px; height: 24px;">
-          <div class="w-3.5 h-3.5 rounded-sm bg-[#0B1520] ${
+          <div class="w-3 h-3 rounded-sm bg-[#080808] ${
             isSelected 
-              ? 'border-2 border-[#38bdf8] ring-1 ring-white shadow-[0_0_8px_#38bdf8]' 
+              ? 'border-2 border-[#00e5ff] ring-1 ring-white shadow-[0_0_8px_#00e5ff]' 
               : isIndian
-              ? 'border-2 border-[#38bdf8]'
-              : 'border border-[#82909B]'
+              ? 'border-2 border-[#00e5ff]'
+              : 'border border-[#8E8C85]'
           } flex items-center justify-center transition-transform group-hover:scale-125">
-            <div class="w-1 h-1 ${isIndian ? 'bg-[#38bdf8]' : 'bg-[#82909B]'} rounded-full"></div>
+            <div class="w-1 h-1 ${isIndian ? 'bg-[#00e5ff]' : 'bg-[#8E8C85]'} rounded-full"></div>
           </div>
         </div>
       `;
@@ -51,10 +51,10 @@ export default function StationMarker({ station, isSelected, onSelect }) {
     // Secondary facility (Camp / Refuge / Depot / Laboratory)
     markerHtml = `
       <div class="relative flex items-center justify-center cursor-pointer group" style="width: 20px; height: 20px;">
-        <div class="w-2.5 h-2.5 rotate-45 ${
+        <div class="w-2 h-2 rotate-45 ${
           isSelected 
-            ? 'bg-[#38bdf8] ring-2 ring-white' 
-            : 'bg-[#0B1520] border border-[#82909B]/70'
+            ? 'bg-[#00e5ff] ring-2 ring-white' 
+            : 'bg-[#080808] border border-[#8E8C85]/70'
         } transition-transform group-hover:scale-125"></div>
       </div>
     `;
@@ -77,15 +77,15 @@ export default function StationMarker({ station, isSelected, onSelect }) {
     >
       <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
         <div className="p-1 font-mono select-none text-center max-w-[200px]">
-          <div className="font-semibold text-xs text-[#F2F4F5] truncate">
+          <div className="font-semibold text-xs text-[#F3F1EB] truncate">
             {station.name}
           </div>
-          <div className="text-[10px] text-[#82909B] mt-0.5 truncate">
+          <div className="text-[10px] text-[#8E8C85] mt-0.5 truncate">
             {station.operatorPrimary || station.country}
             {station.type ? ` • ${station.type}` : ''}
           </div>
           {station.seasonality && (
-            <div className="text-[9px] text-[#38bdf8] mt-0.5 uppercase tracking-wider">
+            <div className="text-[9px] text-[#00e5ff] mt-0.5 uppercase tracking-wider">
               {station.seasonality} {station.status ? `(${station.status})` : ''}
             </div>
           )}

@@ -63,20 +63,20 @@ export default function StationSearchFilter({
     <div ref={searchRef} className="absolute top-6 left-32 z-[1000] select-none font-mono text-xs">
       <div className="flex items-center gap-2">
         {/* Search Bar */}
-        <div className="relative flex items-center bg-[#0B1520]/90 backdrop-blur-md border border-white/10 rounded-sm shadow-xl px-3 py-1.5 w-64 md:w-72 transition-all focus-within:border-[#38bdf8]/60 focus-within:w-80">
-          <Search className="w-3.5 h-3.5 text-[#82909B] shrink-0 mr-2" />
+        <div className="relative flex items-center bg-[#FFFFFF] backdrop-blur-md border border-[#CCE0F0] rounded-sm shadow-md px-3 py-1.5 w-64 md:w-72 transition-all focus-within:border-[#3385C6] focus-within:w-80">
+          <Search className="w-3.5 h-3.5 text-[#68869E] shrink-0 mr-2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder="Search stations, countries..."
-            className="bg-transparent border-none outline-none text-[#F2F4F5] placeholder-[#82909B]/70 text-xs w-full font-mono"
+            className="bg-transparent border-none outline-none text-[#1E3A52] placeholder-[#68869E]/80 text-xs w-full font-mono font-medium"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="text-[#82909B] hover:text-[#F2F4F5] p-0.5 ml-1"
+              className="text-[#68869E] hover:text-[#1E3A52] p-0.5 ml-1"
             >
               <X className="w-3 h-3" />
             </button>
@@ -86,10 +86,10 @@ export default function StationSearchFilter({
         {/* Filter Toggle Button */}
         <button
           onClick={() => setIsOpenFilter(!isOpenFilter)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-sm border backdrop-blur-md shadow-xl transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-sm border backdrop-blur-md shadow-md transition-all ${
             hasActiveFilters
-              ? 'bg-[#0B1520] border-[#38bdf8] text-[#38bdf8]'
-              : 'bg-[#0B1520]/90 border-white/10 text-[#82909B] hover:text-[#F2F4F5]'
+              ? 'bg-[#E8F3FA] border-[#3385C6] text-[#3385C6] font-semibold'
+              : 'bg-[#FFFFFF] border-[#CCE0F0] text-[#68869E] hover:text-[#1E3A52]'
           }`}
           title="Filter Antarctic Stations"
         >
@@ -98,13 +98,13 @@ export default function StationSearchFilter({
             FILTER
           </span>
           {hasActiveFilters && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3385C6]" />
           )}
         </button>
 
         {/* Subtle Facility Count Tag */}
-        <div className="hidden lg:flex items-center px-3 py-2 bg-[#0B1520]/80 backdrop-blur-md border border-white/[0.08] rounded-sm text-[10px] text-[#82909B] tracking-wider uppercase">
-          <span className="text-[#F2F4F5] font-semibold mr-1">
+        <div className="hidden lg:flex items-center px-3 py-2 bg-[#FFFFFF] backdrop-blur-md border border-[#CCE0F0] rounded-sm text-[10px] text-[#68869E] tracking-wider uppercase shadow-xs">
+          <span className="text-[#1E3A52] font-bold mr-1">
             {filteredStations.length}
           </span>
           <span>/ {stations.length} FACILITIES</span>
@@ -118,29 +118,29 @@ export default function StationSearchFilter({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute top-full left-0 mt-1.5 w-80 bg-[#0B1520]/95 backdrop-blur-md border border-white/10 rounded-sm shadow-2xl overflow-hidden py-1 z-50"
+            className="absolute top-full left-0 mt-1.5 w-80 bg-[#FFFFFF] backdrop-blur-md border border-[#CCE0F0] rounded-sm shadow-xl overflow-hidden py-1 z-50"
           >
-            <div className="px-3 py-1.5 border-b border-white/[0.08] text-[9px] tracking-[0.2em] text-[#82909B] uppercase font-semibold flex justify-between">
+            <div className="px-3 py-1.5 border-b border-[#CCE0F0] text-[9px] tracking-[0.2em] text-[#68869E] uppercase font-bold flex justify-between bg-[#F4F8FB]">
               <span>MATCHING STATIONS</span>
               <span>{searchResults.length} RESULTS</span>
             </div>
 
-            <div className="max-h-60 overflow-y-auto divide-y divide-white/[0.04]">
+            <div className="max-h-60 overflow-y-auto divide-y divide-[#CCE0F0]/50">
               {searchResults.map((station) => (
                 <button
                   key={station.id}
                   onClick={() => handleSelectResult(station)}
-                  className="w-full text-left px-3 py-2 hover:bg-[#122234] transition-colors flex items-center justify-between group"
+                  className="w-full text-left px-3 py-2 hover:bg-[#F4F8FB] transition-colors flex items-center justify-between group"
                 >
                   <div className="min-w-0 pr-2">
-                    <div className="text-xs text-[#F2F4F5] font-medium truncate group-hover:text-[#38bdf8]">
+                    <div className="text-xs text-[#1E3A52] font-semibold truncate group-hover:text-[#3385C6]">
                       {station.name}
                     </div>
-                    <div className="text-[10px] text-[#82909B] truncate">
+                    <div className="text-[10px] text-[#68869E] truncate">
                       {station.operatorPrimary || station.country} • {station.type}
                     </div>
                   </div>
-                  <span className="text-[9px] text-[#38bdf8] uppercase px-1 py-0.5 rounded bg-[#38bdf8]/10 shrink-0">
+                  <span className="text-[9px] text-[#3385C6] uppercase px-1.5 py-0.5 rounded bg-[#E8F3FA] border border-[#CCE0F0] shrink-0 font-medium">
                     {station.seasonality}
                   </span>
                 </button>
@@ -158,16 +158,16 @@ export default function StationSearchFilter({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.16 }}
-            className="absolute top-full left-0 mt-2 w-72 md:w-80 bg-[#0B1520]/95 backdrop-blur-md border border-white/10 rounded-sm p-4 shadow-2xl z-50 space-y-4"
+            className="absolute top-full left-0 mt-2 w-72 md:w-80 bg-[#FFFFFF] backdrop-blur-md border border-[#CCE0F0] rounded-sm p-4 shadow-xl z-50 space-y-4"
           >
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-              <span className="text-[10px] tracking-[0.2em] uppercase text-[#82909B] font-medium">
+            <div className="flex items-center justify-between pb-2 border-b border-[#CCE0F0]">
+              <span className="text-[10px] tracking-[0.2em] uppercase text-[#68869E] font-bold">
                 FACILITY FILTERS
               </span>
               {hasActiveFilters && (
                 <button
                   onClick={handleResetFilters}
-                  className="text-[10px] text-[#38bdf8] hover:underline"
+                  className="text-[10px] text-[#3385C6] font-semibold hover:underline"
                 >
                   Reset
                 </button>
@@ -176,7 +176,7 @@ export default function StationSearchFilter({
 
             {/* Seasonality */}
             <div>
-              <label className="text-[9px] uppercase tracking-widest text-[#82909B] block mb-1.5">
+              <label className="text-[9px] uppercase tracking-widest text-[#68869E] block mb-1.5 font-semibold">
                 Seasonality
               </label>
               <div className="grid grid-cols-3 gap-1">
@@ -186,8 +186,8 @@ export default function StationSearchFilter({
                     onClick={() => setSelectedSeasonality(s)}
                     className={`py-1 text-[10px] rounded-sm transition-colors border ${
                       selectedSeasonality === s
-                        ? 'bg-[#38bdf8]/20 border-[#38bdf8] text-[#F2F4F5] font-semibold'
-                        : 'border-white/[0.06] text-[#82909B] hover:text-[#F2F4F5]'
+                        ? 'bg-[#E8F3FA] border-[#3385C6] text-[#0F2130] font-bold shadow-xs'
+                        : 'border-[#CCE0F0] text-[#68869E] hover:text-[#1E3A52] hover:bg-[#F4F8FB]'
                     }`}
                   >
                     {s}
@@ -198,7 +198,7 @@ export default function StationSearchFilter({
 
             {/* Facility Type */}
             <div>
-              <label className="text-[9px] uppercase tracking-widest text-[#82909B] block mb-1.5">
+              <label className="text-[9px] uppercase tracking-widest text-[#68869E] block mb-1.5 font-semibold">
                 Facility Type
               </label>
               <div className="grid grid-cols-2 gap-1 max-h-28 overflow-y-auto">
@@ -208,8 +208,8 @@ export default function StationSearchFilter({
                     onClick={() => setSelectedType(t)}
                     className={`py-1 px-2 text-[10px] text-left truncate rounded-sm transition-colors border ${
                       selectedType === t
-                        ? 'bg-[#38bdf8]/20 border-[#38bdf8] text-[#F2F4F5] font-semibold'
-                        : 'border-white/[0.06] text-[#82909B] hover:text-[#F2F4F5]'
+                        ? 'bg-[#E8F3FA] border-[#3385C6] text-[#0F2130] font-bold shadow-xs'
+                        : 'border-[#CCE0F0] text-[#68869E] hover:text-[#1E3A52] hover:bg-[#F4F8FB]'
                     }`}
                   >
                     {t}
@@ -220,27 +220,27 @@ export default function StationSearchFilter({
 
             {/* Country / Operator Dropdown */}
             <div>
-              <label className="text-[9px] uppercase tracking-widest text-[#82909B] block mb-1.5">
+              <label className="text-[9px] uppercase tracking-widest text-[#68869E] block mb-1.5 font-semibold">
                 Country / National Program
               </label>
               <div className="relative">
                 <select
                   value={selectedCountry}
                   onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full bg-[#071018] border border-white/10 rounded-sm py-1.5 px-2 text-[11px] text-[#F2F4F5] outline-none font-mono cursor-pointer appearance-none pr-6"
+                  className="w-full bg-[#F4F8FB] border border-[#CCE0F0] rounded-sm py-1.5 px-2 text-[11px] text-[#1E3A52] outline-none font-mono cursor-pointer appearance-none pr-6 font-medium"
                 >
                   {countries.map((c) => (
-                    <option key={c} value={c} className="bg-[#0B1520] text-[#F2F4F5]">
+                    <option key={c} value={c} className="bg-[#FFFFFF] text-[#1E3A52]">
                       {c === 'All' ? 'All Countries / Operators' : c}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3 h-3 text-[#82909B] absolute right-2 top-2.5 pointer-events-none" />
+                <ChevronDown className="w-3 h-3 text-[#68869E] absolute right-2 top-2.5 pointer-events-none" />
               </div>
             </div>
 
             {/* Statistical summary inside panel */}
-            <div className="pt-2 border-t border-white/[0.08] flex justify-between text-[9px] text-[#82909B]">
+            <div className="pt-2 border-t border-[#CCE0F0] flex justify-between text-[9px] text-[#68869E]">
               <span>Matching: {filteredStations.length} of {stations.length}</span>
               <span>Year-round: {stats?.yearRound || 0}</span>
             </div>

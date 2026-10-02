@@ -13,27 +13,28 @@
     --font-mono: 'JetBrains Mono', monospace;
     --font-tech: 'Space Grotesk', sans-serif;
 
-    /* Color primitives */
-    --color-black: #000000;
-    --color-deep: #050810;
-    --color-navy: #080e1e;
-    --color-navy-mid: #0d1830;
-    --color-white: #ffffff;
-    --color-off-white: #f0f2f5;
-    --color-gray-dim: #8a9bb5;
-    --color-gray-muted: #3d4d65;
-    --color-cyan: #00e5ff;
-    --color-cyan-dim: rgba(0, 229, 255, 0.5);
-    --color-amber: #f59e0b;
-    --color-red: #ef4444;
+    /* Antarctic Light Polar Theme Color primitives */
+    --color-polar-bg: #F4F8FB;
+    --color-polar-card: #FFFFFF;
+    --color-polar-border: #CCE0F0;
+    --color-polar-primary: #3385C6;
+    --color-polar-primary-light: #66A3D3;
+    --color-polar-text: #1E3A52;
+    --color-polar-heading: #0F2130;
+    --color-polar-muted: #68869E;
+    --color-polar-ice: #E8F3FA;
+    --color-polar-cyan: #00b4d8;
+    --color-amber: #d97706;
+    --color-red: #e11d48;
 
     /* Line weights */
-    --line-thin: 1px solid rgba(255,255,255,0.08);
-    --line-bright: 1px solid rgba(255,255,255,0.25);
+    --line-thin: 1px solid #CCE0F0;
+    --line-bright: 1px solid #3385C6;
   }
 
   html {
     scroll-behavior: smooth;
+    background-color: #F4F8FB;
   }
 
   /* Map page: prevent scroll */
@@ -41,22 +42,23 @@
   html.map-view body {
     overflow: hidden;
     height: 100%;
+    background-color: #F4F8FB;
   }
 
   body {
     font-family: var(--font-body);
-    background: var(--color-black);
-    color: var(--color-white);
+    background: #F4F8FB;
+    color: #1E3A52;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     cursor: default;
   }
 
   /* Minimal scrollbar */
-  ::-webkit-scrollbar { width: 3px; height: 3px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.3); }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #F4F8FB; }
+  ::-webkit-scrollbar-thumb { background: #CCE0F0; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #66A3D3; }
 }
 
 /* ============================================================
@@ -71,7 +73,7 @@
 
 .font-mono {
   font-family: var(--font-mono);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .font-tech {
@@ -82,18 +84,18 @@
 /* Editorial uppercase labels */
 .label-xs {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
+  color: #68869E;
 }
 
 .label-sm {
   font-family: var(--font-tech);
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
+  color: #1E3A52;
 }
 
 /* ============================================================
@@ -122,7 +124,7 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.35);
+  color: #68869E;
 }
 
 /* ============================================================
@@ -132,72 +134,81 @@
 .line-h {
   width: 100%;
   height: 1px;
-  background: rgba(255,255,255,0.08);
+  background: #CCE0F0;
 }
 
 .line-v {
   width: 1px;
   height: 100%;
-  background: rgba(255,255,255,0.08);
+  background: #CCE0F0;
 }
 
 /* ============================================================
-   LEAFLET MAP CUSTOMIZATIONS
+   LEAFLET MAP CUSTOMIZATIONS (ANTARCTIC LIGHT POLAR THEME)
    ============================================================ */
 
 .leaflet-container {
-  background-color: #060a12 !important;
+  background-color: #E2EEF8 !important;
   font-family: var(--font-body);
   width: 100%;
   height: 100%;
 }
 
+.leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
 .leaflet-control-zoom {
-  border: 1px solid rgba(56, 189, 248, 0.2) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important;
+  border: 1px solid #CCE0F0 !important;
+  box-shadow: 0 4px 16px rgba(15, 33, 48, 0.08) !important;
   border-radius: 4px !important;
   overflow: hidden;
 }
 
 .leaflet-control-zoom a {
-  background-color: #0b1324 !important;
-  color: #38bdf8 !important;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.15) !important;
+  background-color: #FFFFFF !important;
+  color: #1E3A52 !important;
+  border-bottom: 1px solid #CCE0F0 !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background-color: #13223f !important;
-  color: #00e5ff !important;
+  background-color: #F4F8FB !important;
+  color: #3385C6 !important;
 }
 
 .leaflet-control-attribution {
-  background: rgba(7, 11, 20, 0.85) !important;
-  color: #64748b !important;
-  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #68869E !important;
+  font-size: 9px !important;
+  font-family: var(--font-mono) !important;
   border-top-left-radius: 4px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid #CCE0F0;
+  border-left: 1px solid #CCE0F0;
 }
 
-.leaflet-control-attribution a { color: #38bdf8 !important; }
+.leaflet-control-attribution a { color: #3385C6 !important; text-decoration: none; }
+.leaflet-control-attribution a:hover { text-decoration: underline; color: #1E3A52 !important; }
 
 .leaflet-popup-content-wrapper {
-  background: #0b1325 !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  background: #FFFFFF !important;
+  color: #1E3A52 !important;
+  border: 1px solid #CCE0F0 !important;
   border-radius: 6px !important;
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.8), 0 0 15px rgba(0,229,255,0.15) !important;
+  box-shadow: 0 10px 25px rgba(15, 33, 48, 0.12) !important;
   padding: 0 !important;
 }
 
 .leaflet-popup-content { margin: 0 !important; line-height: 1.4 !important; }
-.leaflet-popup-tip { background: #0b1325 !important; border: 1px solid rgba(56, 189, 248, 0.3) !important; }
+.leaflet-popup-tip { background: #FFFFFF !important; border: 1px solid #CCE0F0 !important; }
 
 .leaflet-tooltip {
-  background: rgba(11, 21, 32, 0.95) !important;
-  color: #F2F4F5 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 2px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #1E3A52 !important;
+  border: 1px solid #CCE0F0 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 14px rgba(15, 33, 48, 0.1) !important;
   padding: 4px 8px !important;
   font-family: var(--font-mono) !important;
 }

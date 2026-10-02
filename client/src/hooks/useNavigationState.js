@@ -79,11 +79,22 @@ export function useNavigationState() {
     });
   }, [vessel]);
 
+  const resetAntarcticOverview = useCallback(() => {
+    setMapCenter([-68.5000, 72.0000]);
+    setMapZoom(5);
+    setSelectedObject(null);
+  }, []);
+
   const selectIceberg = useCallback((icebergData) => {
     setSelectedObject({
       type: 'iceberg',
       data: icebergData
     });
+    if (icebergData.coordinates || (icebergData.latitude && icebergData.longitude)) {
+      const coords = icebergData.coordinates || [icebergData.latitude, icebergData.longitude];
+      setMapCenter(coords);
+      setMapZoom(6);
+    }
   }, []);
 
   const selectStation = useCallback((stationData) => {
@@ -91,8 +102,10 @@ export function useNavigationState() {
       type: 'station',
       data: stationData
     });
-    setMapCenter(stationData.coordinates);
-    setMapZoom(6);
+    if (stationData.coordinates) {
+      setMapCenter(stationData.coordinates);
+      setMapZoom(6);
+    }
   }, []);
 
   const selectRoute = useCallback((routeData) => {

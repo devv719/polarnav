@@ -15,7 +15,7 @@ export default function FloatingLayersControl({
     { num: '03', key: 'icebergs', label: 'ICEBERGS' },
     { num: '04', key: 'vessel', label: 'VESSEL' },
     { num: '05', key: 'recommendedRoute', label: 'ROUTES' },
-    { num: '06', key: 'riskZones', label: 'RISK ZONES' }
+    { num: '06', key: 'riskZones', label: 'RISK' }
   ];
 
   const basemaps = [
@@ -29,11 +29,11 @@ export default function FloatingLayersControl({
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-[#0B1520]/90 hover:bg-[#0E1B29] text-[#F2F4F5] border border-white/10 rounded-sm backdrop-blur-md transition-all duration-200 shadow-xl"
-        title="Toggle Map Layers & Basemaps"
+        className="flex items-center gap-2 px-3.5 py-2 bg-[#FFFFFF] hover:bg-[#F4F8FB] text-[#1E3A52] border border-[#CCE0F0] rounded-sm backdrop-blur-md transition-all duration-200 shadow-md"
+        title="Map Layers & Basemap Control"
       >
-        <span className="text-xs text-[#38bdf8] leading-none">☷</span>
-        <span className="text-[10px] tracking-[0.16em] uppercase font-medium">LAYERS</span>
+        <span className="text-xs text-[#3385C6] leading-none">☷</span>
+        <span className="text-[10px] tracking-[0.18em] uppercase font-semibold">LAYERS</span>
       </button>
 
       {/* Popover Panel */}
@@ -44,16 +44,16 @@ export default function FloatingLayersControl({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className="mt-2.5 w-60 bg-[#0B1520]/95 backdrop-blur-md border border-white/10 rounded-sm p-4 shadow-2xl space-y-4"
+            className="mt-2.5 w-60 bg-[#FFFFFF]/98 backdrop-blur-md border border-[#CCE0F0] rounded-sm p-4 shadow-xl space-y-4 text-xs"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-              <span className="text-[10px] tracking-[0.2em] uppercase text-[#82909B] font-medium">
-                MAP LAYERS
+            <div className="flex items-center justify-between pb-2 border-b border-[#CCE0F0]">
+              <span className="text-[10px] tracking-[0.2em] uppercase text-[#68869E] font-semibold">
+                MAP CONTROLS
               </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-xs text-[#82909B] hover:text-[#F2F4F5] transition-colors leading-none"
+                className="text-xs text-[#68869E] hover:text-[#1E3A52] transition-colors leading-none"
               >
                 ✕
               </button>
@@ -62,7 +62,7 @@ export default function FloatingLayersControl({
             {/* Basemap Switcher */}
             {setBaseLayer && (
               <div>
-                <label className="text-[9px] uppercase tracking-widest text-[#82909B] block mb-1.5">
+                <label className="text-[9px] uppercase tracking-widest text-[#68869E] block mb-1.5 font-semibold">
                   BASEMAP
                 </label>
                 <div className="grid grid-cols-3 gap-1">
@@ -72,8 +72,8 @@ export default function FloatingLayersControl({
                       onClick={() => setBaseLayer(b.id)}
                       className={`py-1 text-[9px] tracking-wider rounded-sm transition-colors border ${
                         baseLayer === b.id
-                          ? 'bg-[#38bdf8]/20 border-[#38bdf8] text-[#F2F4F5] font-semibold'
-                          : 'border-white/[0.06] text-[#82909B] hover:text-[#F2F4F5]'
+                          ? 'bg-[#E8F3FA] border-[#3385C6] text-[#0F2130] font-bold shadow-xs'
+                          : 'border-[#CCE0F0] text-[#68869E] hover:text-[#1E3A52] hover:bg-[#F4F8FB]'
                       }`}
                     >
                       {b.label}
@@ -84,9 +84,9 @@ export default function FloatingLayersControl({
             )}
 
             {/* Layer Toggles */}
-            <div className="space-y-2">
-              <label className="text-[9px] uppercase tracking-widest text-[#82909B] block mb-1">
-                OVERLAYS
+            <div className="space-y-1.5 pt-1">
+              <label className="text-[9px] uppercase tracking-widest text-[#68869E] block mb-1 font-semibold">
+                LAYERS
               </label>
               {layerItems.map((item) => {
                 const isActive = layers[item.key];
@@ -94,15 +94,15 @@ export default function FloatingLayersControl({
                   <button
                     key={item.key}
                     onClick={() => onToggleLayer(item.key)}
-                    className="w-full flex items-center justify-between py-1 text-left group transition-colors"
+                    className="w-full flex items-center justify-between py-1.5 px-2 rounded-sm text-left group hover:bg-[#F4F8FB] transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-[#82909B] font-mono opacity-60">
+                      <span className="text-[10px] text-[#68869E] font-mono">
                         {item.num}
                       </span>
                       <span
                         className={`text-[11px] tracking-wider transition-colors ${
-                          isActive ? 'text-[#F2F4F5] font-medium' : 'text-[#82909B] group-hover:text-[#F2F4F5]'
+                          isActive ? 'text-[#1E3A52] font-semibold' : 'text-[#68869E] group-hover:text-[#1E3A52]'
                         }`}
                       >
                         {item.label}
@@ -111,8 +111,8 @@ export default function FloatingLayersControl({
                     <span
                       className={`w-2 h-2 rounded-full transition-all duration-200 ${
                         isActive
-                          ? 'bg-[#38bdf8] shadow-[0_0_8px_#38bdf8]'
-                          : 'bg-white/20 group-hover:bg-white/40'
+                          ? 'bg-[#3385C6] shadow-[0_0_6px_#66A3D3]'
+                          : 'bg-[#CCE0F0] group-hover:bg-[#9CBED8]'
                       }`}
                     />
                   </button>

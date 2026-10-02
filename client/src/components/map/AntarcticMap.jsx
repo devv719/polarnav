@@ -14,6 +14,7 @@ import { ANTARCTIC_BASE_VIEW } from '../../data/antarcticDemoData';
 
 function MapViewController({ center, zoom }) {
   const map = useMap();
+
   useEffect(() => {
     if (center) {
       map.flyTo(center, zoom, {
@@ -22,6 +23,15 @@ function MapViewController({ center, zoom }) {
       });
     }
   }, [center, zoom, map]);
+
+  useEffect(() => {
+    // Invalidate size to guarantee correct tile alignment after render
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [map]);
+
   return null;
 }
 
@@ -65,7 +75,7 @@ export default function AntarcticMap({
   stats
 }) {
   return (
-    <div className="relative w-full h-full bg-[#071018] overflow-hidden">
+    <div className="relative w-full h-full bg-[#050505] overflow-hidden">
       {/* 1. Floating Left Layers Control with Basemaps */}
       <FloatingLayersControl
         layers={layers}

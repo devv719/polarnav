@@ -72,9 +72,9 @@ export default function MapPage() {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen bg-[#071018] flex flex-col items-center justify-center text-[#F2F4F5] font-mono select-none">
-        <div className="w-8 h-8 rounded-full border border-[#38bdf8]/20 border-t-[#38bdf8] animate-spin mb-4" />
-        <span className="text-xs tracking-[0.2em] text-[#82909B] uppercase font-medium">
+      <div className="h-screen w-screen bg-[#F4F8FB] flex flex-col items-center justify-center text-[#1E3A52] font-mono select-none">
+        <div className="w-8 h-8 rounded-full border border-[#CCE0F0] border-t-[#3385C6] animate-spin mb-4" />
+        <span className="text-xs tracking-[0.2em] text-[#68869E] uppercase font-semibold">
           LOADING ANTARCTIC GEOSPATIAL INTELLIGENCE
         </span>
       </div>
@@ -82,12 +82,12 @@ export default function MapPage() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#071018] text-[#F2F4F5] font-sans overflow-hidden select-none">
+    <div className="h-screen w-screen flex flex-col bg-[#F4F8FB] text-[#1E3A52] font-sans overflow-hidden select-none">
       {/* 1. TOP MINIMAL NAVIGATION (~60px) */}
       <Header />
 
       {/* 2. MAIN MAP VIEWPORT (~90% screen) */}
-      <main className="flex-1 w-full h-full relative overflow-hidden">
+      <main className="flex-1 min-h-0 w-full relative overflow-hidden">
         <AntarcticMap
           layers={layers}
           onToggleLayer={toggleLayer}

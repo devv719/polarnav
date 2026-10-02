@@ -18,54 +18,54 @@ export default function Header() {
   ];
 
   return (
-    <header className="h-[60px] bg-[#071018] border-b border-white/[0.07] px-6 flex items-center justify-between z-30 shrink-0 select-none">
+    <header className="h-[60px] bg-[#FFFFFF] border-b border-[#CCE0F0] px-6 flex items-center justify-between z-30 shrink-0 select-none shadow-sm">
       {/* Left: Brand + Subtitle */}
       <div className="flex items-center gap-6">
         <Link to="/" className="group flex items-baseline gap-2">
-          <span className="text-sm font-semibold tracking-[0.2em] text-[#F2F4F5] font-display">
+          <span className="text-base font-bold tracking-[0.18em] text-[#0F2130] font-display">
             POLARNAV
           </span>
-          <span className="text-[10px] tracking-wider text-[#38bdf8] font-mono font-medium">
+          <span className="text-[10px] tracking-wider text-[#3385C6] font-mono font-semibold px-1 py-0.2 rounded bg-[#E8F3FA] border border-[#CCE0F0]">
             AI
           </span>
         </Link>
-        <span className="hidden md:inline-block w-[1px] h-3.5 bg-white/10" />
-        <span className="hidden md:inline-block text-[10px] tracking-[0.18em] uppercase text-[#82909B] font-mono font-light">
+        <span className="hidden md:inline-block w-[1px] h-3.5 bg-[#CCE0F0]" />
+        <span className="hidden md:inline-block text-[10px] tracking-[0.18em] uppercase text-[#68869E] font-mono font-medium">
           ANTARCTIC NAVIGATION INTELLIGENCE
         </span>
       </div>
 
       {/* Center: Clean Text Navigation */}
-      <nav className="hidden sm:flex items-center gap-8">
+      <nav className="hidden sm:flex items-center gap-7">
         {navLinks.map((link) => {
           const isActive = location.pathname === link.path;
           return (
             <Link
               key={link.label}
               to={link.path}
-              className={`relative py-1 text-[11px] tracking-[0.18em] uppercase font-mono transition-colors duration-200 ${
+              className={`relative py-1 text-[11px] tracking-[0.16em] uppercase font-mono transition-colors duration-200 ${
                 isActive
-                  ? 'text-[#F2F4F5] font-medium'
-                  : 'text-[#82909B] hover:text-[#F2F4F5]'
+                  ? 'text-[#3385C6] font-bold'
+                  : 'text-[#68869E] hover:text-[#1E3A52]'
               }`}
             >
               {link.label}
               {isActive && (
-                <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-[#38bdf8]" />
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#3385C6] rounded-full" />
               )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Right: Live UTC + Single Clean Status Dot */}
+      {/* Right: Live UTC + Clean Status Dot */}
       <div className="flex items-center gap-4 text-right font-mono">
-        <span className="text-xs tracking-wider text-[#F2F4F5] font-normal">
+        <span className="text-xs tracking-wider text-[#1E3A52] font-semibold">
           {utcDisplay}
         </span>
-        <div className="flex items-center gap-1.5 pl-2 border-l border-white/10" title="System Status: Operational">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="hidden lg:inline text-[10px] tracking-wider uppercase text-[#82909B]">
+        <div className="flex items-center gap-1.5 pl-3 border-l border-[#CCE0F0]" title="System Status: Operational">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="hidden lg:inline text-[10px] tracking-wider uppercase text-[#68869E] font-medium">
             LIVE
           </span>
         </div>

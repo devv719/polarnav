@@ -10,21 +10,21 @@ export default function MapControls({ onResetAntarctica }) {
       <button
         onClick={() => map.zoomIn()}
         title="Zoom In"
-        className="w-8 h-8 rounded-sm bg-[#0B1520]/90 hover:bg-[#0E1B29] text-[#F2F4F5] border border-white/10 flex items-center justify-center backdrop-blur-md transition-colors shadow-lg"
+        className="w-8 h-8 rounded-sm bg-[#080808]/90 hover:bg-[#141414] text-[#F3F1EB] border border-white/10 flex items-center justify-center backdrop-blur-md transition-colors shadow-lg"
       >
         <Plus className="w-3.5 h-3.5" />
       </button>
       <button
         onClick={() => map.zoomOut()}
         title="Zoom Out"
-        className="w-8 h-8 rounded-sm bg-[#0B1520]/90 hover:bg-[#0E1B29] text-[#F2F4F5] border border-white/10 flex items-center justify-center backdrop-blur-md transition-colors shadow-lg"
+        className="w-8 h-8 rounded-sm bg-[#080808]/90 hover:bg-[#141414] text-[#F3F1EB] border border-white/10 flex items-center justify-center backdrop-blur-md transition-colors shadow-lg"
       >
         <Minus className="w-3.5 h-3.5" />
       </button>
       <button
         onClick={onResetAntarctica}
         title="Reset to Antarctic Overview"
-        className="w-8 h-8 rounded-sm bg-[#0B1520]/90 hover:bg-[#0E1B29] text-[#82909B] hover:text-[#38bdf8] border border-white/10 flex items-center justify-center backdrop-blur-md transition-colors shadow-lg"
+        className="w-8 h-8 rounded-sm bg-[#080808]/90 hover:bg-[#141414] text-[#8E8C85] hover:text-[#00e5ff] border border-white/10 flex items-center justify-center backdrop-blur-md transition-colors shadow-lg"
       >
         <RotateCcw className="w-3.5 h-3.5" />
       </button>

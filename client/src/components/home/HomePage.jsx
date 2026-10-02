@@ -554,11 +554,15 @@ export default function HomePage() {
                     color: 'rgba(255,255,255,0.25)',
                   }}
                 >
-                  DATA PIPELINE INITIALIZING
+                  {mod.id === 'map' ? 'GIS ENGINE ACTIVE' : 'DATA PIPELINE INITIALIZING'}
                 </span>
-                <span className="font-mono text-white/20" style={{ fontSize: '0.6rem', letterSpacing: '0.12em' }}>
-                  SIMULATION MODE
-                </span>
+                <button
+                  onClick={() => navigate(mod.route)}
+                  className="font-mono text-xs text-[#00e5ff] hover:underline flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0"
+                >
+                  <span>{mod.id === 'map' ? 'OPEN POLAR MAP' : 'EXPLORE MODULE'}</span>
+                  <span>→</span>
+                </button>
               </motion.div>
             </motion.div>
           </div>

@@ -84,47 +84,56 @@ export default function MapPage() {
     setActiveRouteType(route.isRecommended ? 'recommended' : 'alternative');
   };
 
-  /** Called when user clicks "Set as Navigation Target" in the station info panel */
-  const handleSetDestination = async (station) => {
+  /** Called when user clicks "Set as Navigation Target" in the station info panel.
+   * Opens the nav workspace in selection mode — does NOT auto-route.
+   * The user must still pick a vessel and click Start Navigation.
+   */
+  const handleSetDestination = (station) => {
     setNavDestination(station);
     setSelectedObject(null);
     setIcebergDriftAnalysis(null);
-    if (vessel && station) {
-      await planRouteForVessel(vessel, station.id, station.coordinates);
-    }
-    // Zoom out slightly so both vessel and destination are visible
+    // Zoom out to show the destination on the map
     if (station.coordinates) {
       zoomTo(station.coordinates, 4);
     }
   };
 
-  /** Called when user switches active vessel from within the Navigation Planning Panel */
-  const handleChangeVessel = async (newVessel) => {
+  /** Called when user switches active vessel from within the Navigation Planning Panel.
+   * Updates the selected vessel and clears any previous route until Start Navigation is clicked.
+   */
+  const handleChangeVessel = (newVessel) => {
     setVessel(newVessel);
-    if (navDestination) {
-      await planRouteForVessel(newVessel, navDestination.id, navDestination.coordinates);
-    }
+    // Clear stale route from previous vessel
+    planRouteForVessel(null, null);
     if (newVessel.coordinates) {
       zoomTo(newVessel.coordinates, 6);
     }
   };
 
-  /** Called when user switches destination target from within the Navigation Planning Panel */
-  const handleChangeDestination = async (newStation) => {
+  /** Called when user switches destination from within the Navigation Planning Panel.
+   * Updates the destination and clears any previous route until Start Navigation is clicked.
+   */
+  const handleChangeDestination = (newStation) => {
     setNavDestination(newStation);
-    if (vessel) {
-      await planRouteForVessel(vessel, newStation.id, newStation.coordinates);
-    }
+    // Clear stale route from previous destination
+    planRouteForVessel(null, null);
     if (newStation.coordinates) {
       zoomTo(newStation.coordinates, 4);
     }
   };
 
-  /** Called when user clicks "Start Navigation" */
-  const handleStartNavigation = ({ vessel: activeVessel, destination, route }) => {
-    if (route) {
-      selectRoute(route);
-      setActiveRouteType(route.isRecommended ? 'recommended' : 'alternative');
+  /** Called when user clicks "Start Navigation" — calculates optimal maritime route for chosen vessel & destination. */
+  const handleStartNavigation = async ({ vessel: activeVessel, destination }) => {
+    if (!activeVessel || !destination) return;
+    const newRoutes = await planRouteForVessel(
+      activeVessel,
+      destination.id,
+      destination.coordinates
+    );
+    const chosenRoute = newRoutes?.recommended || newRoutes?.alternative;
+    if (chosenRoute) {
+      selectRoute(chosenRoute);
+      setActiveRouteType(chosenRoute.isRecommended ? 'recommended' : 'alternative');
     }
     if (activeVessel?.coordinates) {
       zoomTo(activeVessel.coordinates, 6);

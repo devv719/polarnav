@@ -36,31 +36,25 @@ export function useNavigationState() {
   const [mapCenter, setMapCenter] = useState([-68.2000, 72.0000]);
   const [mapZoom, setMapZoom] = useState(5);
 
-  // Initial data loading
+  // Initial data loading — NO vessel or route is pre-selected.
+  // The user must explicitly choose a vessel and destination before any route is calculated.
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const [liveFleet, icebergData, routeData, zoneData, stationData] = await Promise.all([
+        const [liveFleet, icebergData, zoneData, stationData] = await Promise.all([
           navigationService.getLiveVessels(),
           navigationService.getIcebergDetections(),
-          navigationService.getNavigationRoutes(),
           navigationService.getRiskZones(),
           navigationService.getAntarcticStations()
         ]);
 
         setVessels(liveFleet);
-        const primaryVessel = liveFleet[0] || null;
-        setVessel(primaryVessel);
+        // vessel stays null — user must select explicitly
         setIcebergs(icebergData);
-        setRoutes(routeData);
+        // routes stay empty — generated only when user clicks Start Navigation
         setRiskZones(zoneData);
         setStations(stationData);
-
-        if (primaryVessel?.coordinates) {
-          setMapCenter(primaryVessel.coordinates);
-        }
-
         setSelectedObject(null);
       } catch (err) {
         console.error('Error loading PolarNav data:', err);
@@ -73,6 +67,8 @@ export function useNavigationState() {
   }, []);
 
   // Periodic AIS live vessel polling (every 10s)
+  // Only updates the fleet list and refreshes the already-selected vessel.
+  // Never auto-selects the first vessel if none is selected.
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -80,7 +76,9 @@ export function useNavigationState() {
         if (updatedFleet && updatedFleet.length > 0) {
           setVessels(updatedFleet);
           setVessel(prev => {
-            if (!prev) return updatedFleet[0];
+            // If no vessel was selected by the user, keep it null
+            if (!prev) return null;
+            // Refresh telemetry for the user-selected vessel
             const matching = updatedFleet.find(v => v.mmsi === prev.mmsi || v.id === prev.id);
             return matching || prev;
           });
@@ -172,7 +170,10 @@ export function useNavigationState() {
   }, []);
 
   const planRouteForVessel = useCallback(async (vesselObj, destStationId, destCoords = null) => {
-    if (!vesselObj) return;
+    if (!vesselObj || !destStationId) {
+      setRoutes({ recommended: null, alternative: null });
+      return null;
+    }
     try {
       const newRoutes = await navigationService.planTargetedRoute(
         vesselObj.mmsi || vesselObj.id,

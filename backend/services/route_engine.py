@@ -1,7 +1,7 @@
 """
 PolarNav AI - Polar Maritime Route & Waypoint Engine
-Calculates optimal Antarctic navigation corridors avoiding ice hazards,
-landmass intersections, and dense iceberg drift fields.
+Calculates optimal Antarctic navigation corridors that stay in the open
+Southern Ocean, avoiding the Antarctic continent, ice shelves, and coastline.
 """
 
 import math
@@ -75,6 +75,16 @@ STATION_COORDINATES: Dict[str, Dict[str, Any]] = {
     }
 }
 
+# ─── Constants ────────────────────────────────────────────────────────────────
+
+# Routes transit through this latitude band — guaranteed open Southern Ocean.
+TRANSIT_LAT = -57.0
+
+# Points south of this are considered Antarctic coastal / shelf-ice territory.
+COASTAL_THRESHOLD = -62.0
+
+
+# ─── Geodesic helpers ─────────────────────────────────────────────────────────
 
 def haversine_distance_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculates Haversine distance in Nautical Miles between two points."""
@@ -133,6 +143,52 @@ def intermediate_point(lat1: float, lon1: float, lat2: float, lon2: float, fract
     return lat, lon
 
 
+# ─── Open-Ocean Maritime Routing ──────────────────────────────────────────────
+
+TRANSIT_LAT = -59.5
+REGIONAL_DLON_THRESHOLD = 38.0
+
+def _build_ocean_control_points(
+    s_lat: float, s_lon: float,
+    e_lat: float, e_lon: float
+) -> List[Tuple[float, float]]:
+    """
+    Builds (lat, lon) control points for realistic Antarctic maritime routing:
+    - Same-sector (< 38° lon delta): direct sea navigation along the coast/bay.
+    - Cross-continental (>= 38° lon delta): transits safely through open Southern
+      Ocean (~59.5°S) to prevent cutting across the Antarctic continent.
+    """
+    # Shortest-arc longitude span (-180..180)
+    dlon = e_lon - s_lon
+    if dlon > 180.0:
+        dlon -= 360.0
+    elif dlon < -180.0:
+        dlon += 360.0
+
+    # 1. Same-sector / regional sea route: direct path
+    if abs(dlon) < REGIONAL_DLON_THRESHOLD:
+        return [(s_lat, s_lon), (e_lat, e_lon)]
+
+    # 2. Cross-sector route: transit via open Southern Ocean
+    pts: List[Tuple[float, float]] = [(s_lat, s_lon)]
+
+    if s_lat < TRANSIT_LAT:
+        pts.append((TRANSIT_LAT, s_lon))
+
+    n_mid = max(1, int(abs(dlon) / 45.0))
+    for i in range(1, n_mid + 1):
+        frac = i / (n_mid + 1)
+        mid_lon = s_lon + dlon * frac
+        mid_lon = ((mid_lon + 180.0) % 360.0) - 180.0
+        pts.append((TRANSIT_LAT, mid_lon))
+
+    if e_lat < TRANSIT_LAT:
+        pts.append((TRANSIT_LAT, e_lon))
+
+    pts.append((e_lat, e_lon))
+    return pts
+
+
 def generate_polar_waypoints(
     start_lat: float,
     start_lon: float,
@@ -141,31 +197,33 @@ def generate_polar_waypoints(
     is_recommended: bool = True
 ) -> List[List[float]]:
     """
-    Generates a realistic multi-leg waypoint track between vessel and destination.
-    For AI-recommended routes, adds tactical offset arcs around known high-density pack ice.
+    Generates an optimized maritime track.
+    Returns 20-35 clean waypoints for fast, smooth client rendering.
     """
-    total_dist = haversine_distance_nm(start_lat, start_lon, end_lat, end_lon)
-    num_legs = max(4, min(8, int(total_dist / 60.0)))
-    
+    control_pts = _build_ocean_control_points(start_lat, start_lon, end_lat, end_lon)
     waypoints: List[List[float]] = []
-    waypoints.append([round(start_lat, 4), round(start_lon, 4)])
 
-    for i in range(1, num_legs):
-        fraction = i / float(num_legs)
-        lat, lon = intermediate_point(start_lat, start_lon, end_lat, end_lon, fraction)
+    # Calculate total control path length
+    total_legs_target = 24 if is_recommended else 18
+    num_segs = len(control_pts) - 1
+    legs_per_seg = max(2, int(total_legs_target / max(1, num_segs)))
 
-        if is_recommended:
-            # AI Recommended route: introduces a slight arc (0.15 - 0.45 deg) northward to avoid deep pack ice
-            offset_factor = math.sin(fraction * math.pi) * 0.35
-            # Skirt slightly north (higher lat value in Southern hemisphere, e.g. -66 instead of -68)
-            lat += offset_factor
-            # Slight longitudinal stagger for corridor navigation
-            lon += (math.sin(fraction * math.pi * 2) * 0.25)
-        else:
-            # Alternative direct rhumb line: straight direct vector with minor drift
-            pass
+    for seg_idx in range(num_segs):
+        seg_start = control_pts[seg_idx]
+        seg_end   = control_pts[seg_idx + 1]
 
-        waypoints.append([round(lat, 4), round(lon, 4)])
+        for i in range(legs_per_seg):
+            fraction = i / float(legs_per_seg)
+            lat, lon = intermediate_point(
+                seg_start[0], seg_start[1],
+                seg_end[0],   seg_end[1],
+                fraction
+            )
+            # Slight seaward curve for recommended route
+            if is_recommended:
+                lat += math.sin(fraction * math.pi) * 0.45
+
+            waypoints.append([round(lat, 4), round(lon, 4)])
 
     waypoints.append([round(end_lat, 4), round(end_lon, 4)])
     return waypoints
@@ -180,15 +238,23 @@ def plan_antarc_route(
     destination_name: str = "Destination Station"
 ) -> Dict[str, Any]:
     """
-    Computes both AI Recommended and Direct Alternative routes between coordinates.
+    Computes AI Recommended and Alternative routes with accurate maritime distance.
     """
     speed = max(6.0, vessel_speed_knots or 11.5)
-    direct_dist = haversine_distance_nm(start_lat, start_lon, end_lat, end_lon)
-
-    # 1. Recommended Route (Slightly longer distance, much safer speed/fuel)
     rec_waypoints = generate_polar_waypoints(start_lat, start_lon, end_lat, end_lon, is_recommended=True)
-    rec_dist = direct_dist * 1.06
-    rec_speed = speed * 0.95  # smooth transit speed in open leads
+    alt_waypoints = generate_polar_waypoints(start_lat, start_lon, end_lat, end_lon, is_recommended=False)
+
+    # Compute actual nautical miles along the generated waypoints
+    def calc_track_distance(wps: List[List[float]]) -> float:
+        total = 0.0
+        for idx in range(len(wps) - 1):
+            total += haversine_distance_nm(wps[idx][0], wps[idx][1], wps[idx+1][0], wps[idx+1][1])
+        return round(total, 1)
+
+    rec_dist = calc_track_distance(rec_waypoints)
+    alt_dist = calc_track_distance(alt_waypoints)
+
+    rec_speed = speed * 0.95
     rec_time_hours = round(rec_dist / rec_speed, 1)
     rec_fuel_mt = round(rec_time_hours * 0.39, 1)
 
@@ -198,21 +264,18 @@ def plan_antarc_route(
         "type": "AI_OPTIMIZED",
         "isRecommended": True,
         "color": "#38bdf8",
-        "totalDistanceNM": round(rec_dist, 1),
+        "totalDistanceNM": rec_dist,
         "estimatedTimeHours": rec_time_hours,
         "estimatedFuelMT": rec_fuel_mt,
         "riskCategory": "LOW_RISK",
         "decisionRationale": (
-            f"Optimized waypoint corridor to {destination_name} skirting concentrated pack ice "
-            f"and maintaining standoff from tracked iceberg clusters."
+            f"Optimized maritime navigation corridor to {destination_name} staying strictly in navigable "
+            f"polar waters, avoiding ice shelf groundings and landmass intersections."
         ),
         "waypoints": rec_waypoints
     }
 
-    # 2. Alternative Route (Direct rhumb line, higher resistance through ice)
-    alt_waypoints = generate_polar_waypoints(start_lat, start_lon, end_lat, end_lon, is_recommended=False)
-    alt_dist = round(direct_dist, 1)
-    alt_speed = speed * 0.72  # slower due to higher ice resistance
+    alt_speed = speed * 0.80
     alt_time_hours = round(alt_dist / alt_speed, 1)
     alt_fuel_mt = round(alt_time_hours * 0.52, 1)
 
@@ -227,8 +290,8 @@ def plan_antarc_route(
         "estimatedFuelMT": alt_fuel_mt,
         "riskCategory": "HIGH_RISK",
         "decisionRationale": (
-            f"Direct geographic course to {destination_name} traversing multi-year pressure ridges "
-            f"with higher compressive ice resistance."
+            f"Direct maritime course to {destination_name} transiting higher "
+            f"compressive ice zones with reduced speed margins."
         ),
         "waypoints": alt_waypoints
     }

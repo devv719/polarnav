@@ -40,23 +40,31 @@ export default function RouteLayer({
             </Tooltip>
           </Polyline>
 
-          {/* Minimal Waypoints */}
-          {recommended.waypoints.map((wp, idx) => (
-            <CircleMarker
-              key={`rec-wp-${idx}`}
-              center={wp}
-              radius={idx === 0 || idx === recommended.waypoints.length - 1 ? 3.5 : 2}
-              pathOptions={{
-                color: '#38bdf8',
-                fillColor: '#071018',
-                fillOpacity: 1,
-                weight: 1.5
-              }}
-              eventHandlers={{
-                click: () => onSelectRoute && onSelectRoute(recommended)
-              }}
-            />
-          ))}
+          {/* Origin & Destination Terminal Markers */}
+          {recommended.waypoints.length > 0 && (
+            <React.Fragment>
+              <CircleMarker
+                center={recommended.waypoints[0]}
+                radius={4}
+                pathOptions={{
+                  color: '#38bdf8',
+                  fillColor: '#ffffff',
+                  fillOpacity: 1,
+                  weight: 2
+                }}
+              />
+              <CircleMarker
+                center={recommended.waypoints[recommended.waypoints.length - 1]}
+                radius={4}
+                pathOptions={{
+                  color: '#38bdf8',
+                  fillColor: '#38bdf8',
+                  fillOpacity: 1,
+                  weight: 2
+                }}
+              />
+            </React.Fragment>
+          )}
         </React.Fragment>
       )}
 

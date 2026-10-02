@@ -272,6 +272,7 @@ export default function NavigationPlanningPanel({
   const handleVesselChange = (e) => {
     const mmsiOrId = e.target.value;
     const selectedVessel = (vessels || []).find(v => v.mmsi === mmsiOrId || v.id === mmsiOrId);
+    setIsNavActive(false);
     if (selectedVessel && onChangeVessel) {
       onChangeVessel(selectedVessel);
     }
@@ -280,6 +281,7 @@ export default function NavigationPlanningPanel({
   const handleStationChange = (e) => {
     const stationId = e.target.value;
     const selectedSt = availableStations.find(s => s.id === stationId);
+    setIsNavActive(false);
     if (selectedSt && onChangeDestination) {
       onChangeDestination(selectedSt);
     }
@@ -347,7 +349,8 @@ export default function NavigationPlanningPanel({
                 onChange={handleVesselChange}
                 className="w-full py-2 pl-3 pr-8 bg-[#F4F8FB] border border-[#CCE0F0] text-xs font-sans font-bold text-[#0F2130] rounded-sm focus:outline-none focus:border-[#3385C6] transition-colors cursor-pointer appearance-none"
               >
-                {(vessels && vessels.length > 0 ? vessels : [vessel]).filter(Boolean).map(v => (
+                <option value="" disabled>— Select vessel —</option>
+                {(vessels && vessels.length > 0 ? vessels : []).filter(Boolean).map(v => (
                   <option key={v.mmsi || v.id} value={v.mmsi || v.id}>
                     {v.name} ({v.mmsi ? `MMSI: ${v.mmsi}` : v.callSign || 'AIS'}) — {v.speedKnots} kts
                   </option>
@@ -383,10 +386,11 @@ export default function NavigationPlanningPanel({
             </label>
             <div className="relative">
               <select
-                value={destination.id || ''}
+                value={destination?.id || ''}
                 onChange={handleStationChange}
                 className="w-full py-2 pl-3 pr-8 bg-[#F4F8FB] border border-[#CCE0F0] text-xs font-sans font-bold text-[#0F2130] rounded-sm focus:outline-none focus:border-[#3385C6] transition-colors cursor-pointer appearance-none"
               >
+                <option value="" disabled>— Select destination —</option>
                 {availableStations.map(st => (
                   <option key={st.id} value={st.id}>
                     {st.name} ({st.operator || st.country || 'Antarctic'})
@@ -408,7 +412,7 @@ export default function NavigationPlanningPanel({
           <div className="mt-2.5 flex items-center justify-between text-xs font-sans">
             <div className="max-w-[42%]">
               <p className="text-[#68869E] text-[10px] font-semibold uppercase">Origin</p>
-              <p className="font-bold text-[#0F2130] truncate">{vessel?.name || 'ORV Sagar Nidhi'}</p>
+              <p className="font-bold text-[#0F2130] truncate">{vessel?.name || <span className="text-[#68869E] font-normal italic">No vessel selected</span>}</p>
             </div>
             <div className="flex-1 mx-3 h-px bg-[#CCE0F0] relative">
               <div className="absolute inset-0 flex items-center justify-center">
@@ -425,25 +429,37 @@ export default function NavigationPlanningPanel({
         {/* ── ROUTE OPTIONS ── */}
         <div className="px-7 py-5 border-b border-[#CCE0F0] space-y-2">
           <SectionHeading>Route Options</SectionHeading>
-          <div className="mt-3 space-y-2">
-            <RouteOption
-              route={routes?.recommended}
-              isActive={selectedType === 'recommended'}
-              onSelect={handleSelectRoute}
-              riskHazards={selectedType === 'recommended' ? routeHazards : altHazards}
-            />
-            <RouteOption
-              route={routes?.alternative}
-              isActive={selectedType === 'alternative'}
-              onSelect={handleSelectRoute}
-              riskHazards={selectedType === 'alternative' ? routeHazards : altHazards}
-            />
-          </div>
+          {routes?.recommended || routes?.alternative ? (
+            <>
+              <div className="mt-3 space-y-2">
+                <RouteOption
+                  route={routes?.recommended}
+                  isActive={selectedType === 'recommended'}
+                  onSelect={handleSelectRoute}
+                  riskHazards={selectedType === 'recommended' ? routeHazards : altHazards}
+                />
+                <RouteOption
+                  route={routes?.alternative}
+                  isActive={selectedType === 'alternative'}
+                  onSelect={handleSelectRoute}
+                  riskHazards={selectedType === 'alternative' ? routeHazards : altHazards}
+                />
+              </div>
 
-          {activeRoute?.decisionRationale && (
-            <p className="text-xs text-[#68869E] font-sans leading-relaxed pt-2">
-              {activeRoute.decisionRationale}
-            </p>
+              {activeRoute?.decisionRationale && (
+                <p className="text-xs text-[#68869E] font-sans leading-relaxed pt-2">
+                  {activeRoute.decisionRationale}
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="py-4 text-center bg-[#F4F8FB] border border-dashed border-[#CCE0F0] rounded p-4 my-2">
+              <p className="text-xs text-[#68869E] font-sans">
+                {vessel && destination
+                  ? 'Ready to navigate. Click "Start Navigation" below to compute real-time route.'
+                  : 'Select both a vessel and destination to plan navigation.'}
+              </p>
+            </div>
           )}
         </div>
 
@@ -572,10 +588,22 @@ export default function NavigationPlanningPanel({
         </div>
 
         {/* Primary Start Navigation Button */}
+        {(!vessel || !destination) && (
+          <p className="text-[10px] font-sans text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 mb-3 text-center">
+            {!vessel && !destination
+              ? 'Select a vessel and destination to begin'
+              : !vessel
+              ? 'Select a vessel to continue'
+              : 'Select a destination to continue'}
+          </p>
+        )}
         <button
           onClick={handleStartNavClick}
+          disabled={!vessel || !destination}
           className={`w-full py-3.5 flex items-center justify-center gap-2.5 text-xs font-sans font-bold uppercase tracking-[0.16em] transition-all shadow-sm ${
-            isNavActive
+            !vessel || !destination
+              ? 'bg-[#CCE0F0] text-[#68869E] cursor-not-allowed'
+              : isNavActive
               ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
               : 'bg-[#0F2130] hover:bg-[#1E3A52] text-white'
           }`}

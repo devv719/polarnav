@@ -19,14 +19,14 @@ export default function HeroVideo({ opacity = 1 }) {
 
   return (
     <div className="absolute inset-0 overflow-hidden" style={{ opacity }}>
-      {/* Gradient fallback (always visible behind video) */}
+      {/* Glacial light polar gradient fallback */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse at 30% 70%, rgba(0,60,100,0.5) 0%, transparent 60%),
-            radial-gradient(ellipse at 70% 20%, rgba(0,40,80,0.4) 0%, transparent 55%),
-            linear-gradient(170deg, #000000 0%, #020d1f 40%, #050810 100%)
+            radial-gradient(ellipse at 70% 30%, rgba(204, 224, 240, 0.45) 0%, transparent 65%),
+            radial-gradient(ellipse at 20% 80%, rgba(232, 243, 250, 0.6) 0%, transparent 60%),
+            linear-gradient(175deg, #FFFFFF 0%, #F4F8FB 50%, #E8F3FA 100%)
           `,
         }}
       />
@@ -41,32 +41,36 @@ export default function HeroVideo({ opacity = 1 }) {
         loop
         playsInline
         preload="auto"
-        style={{ opacity: 0.75 }}
+        style={{ opacity: 0.22, filter: 'contrast(1.1) brightness(1.1)' }}
         onError={() => {
           if (videoRef.current) videoRef.current.style.display = 'none';
         }}
       />
 
-      {/* Dark cinematic overlay */}
+      {/* Light Glacial Frost Overlay */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: `
             linear-gradient(to bottom,
-              rgba(0,0,0,0.55) 0%,
-              rgba(0,0,0,0.25) 40%,
-              rgba(0,0,0,0.6) 80%,
-              rgba(0,0,0,0.85) 100%
+              rgba(244, 248, 251, 0.4) 0%,
+              rgba(244, 248, 251, 0.1) 40%,
+              rgba(244, 248, 251, 0.65) 80%,
+              rgba(244, 248, 251, 0.95) 100%
             )
           `,
         }}
       />
 
-      {/* Subtle vignette */}
+      {/* Subtle fine polar grid lines */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-25"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)',
+          backgroundImage: `
+            linear-gradient(to right, #CCE0F0 1px, transparent 1px),
+            linear-gradient(to bottom, #CCE0F0 1px, transparent 1px)
+          `,
+          backgroundSize: '120px 120px',
         }}
       />
     </div>

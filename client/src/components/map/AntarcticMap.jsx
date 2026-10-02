@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { MapContainer, useMap, useMapEvents } from 'react-leaflet';
 import MapBaseLayer from './MapBaseLayer';
+import SatelliteLayer from './SatelliteLayer';
 import VesselMarker from './VesselMarker';
 import IcebergMarker from './IcebergMarker';
 import RouteLayer from './RouteLayer';
@@ -75,7 +76,7 @@ export default function AntarcticMap({
   stats
 }) {
   return (
-    <div className="relative w-full h-full bg-[#050505] overflow-hidden">
+    <div className="relative w-full h-full bg-[#F4F8FB] overflow-hidden">
       {/* 1. Floating Left Layers Control with Basemaps */}
       <FloatingLayersControl
         layers={layers}
@@ -117,6 +118,9 @@ export default function AntarcticMap({
 
         {/* Satellite / Ocean / Topo Basemap */}
         <MapBaseLayer mapType={baseLayer} />
+
+        {/* NASA GIBS Daily MODIS Visual Imagery Tile Layer */}
+        <SatelliteLayer visible={layers.nasaGibs} />
 
         {/* Subtle Sea Ice & Risk Hazard Layer */}
         <RiskZoneLayer

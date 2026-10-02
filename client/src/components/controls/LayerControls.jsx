@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Ship, 
   TriangleAlert, 
@@ -9,7 +8,8 @@ import {
   Layers, 
   Thermometer, 
   Wind, 
-  Binary
+  Binary,
+  Globe
 } from 'lucide-react';
 import LayerToggleItem from './LayerToggleItem';
 
@@ -19,11 +19,11 @@ export default function LayerControls({ layers, onToggleLayer }) {
       {/* Group 1: Core Navigation & Vessels */}
       <div>
         <div className="flex items-center justify-between mb-1.5 px-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/80 font-semibold flex items-center gap-1.5">
-            <Ship className="w-3 h-3 text-cyan-400" />
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#3385C6] font-semibold flex items-center gap-1.5">
+            <Ship className="w-3 h-3 text-[#3385C6]" />
             Tactical Fleet & Routes
           </span>
-          <span className="text-[9px] font-mono text-slate-400">ACTIVE</span>
+          <span className="text-[9px] font-mono text-[#68869E]">ACTIVE</span>
         </div>
         <div className="space-y-1.5">
           <LayerToggleItem
@@ -32,7 +32,7 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={Ship}
             active={layers.vessel}
             onToggle={() => onToggleLayer('vessel')}
-            colorClass="text-cyan-400"
+            colorClass="text-[#3385C6]"
             badgeText="SOG: 11.4 kts"
           />
 
@@ -42,8 +42,8 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={Navigation}
             active={layers.recommendedRoute}
             onToggle={() => onToggleLayer('recommendedRoute')}
-            colorClass="text-emerald-400"
-            accentBorder="border-emerald-500/40"
+            colorClass="text-emerald-600"
+            accentBorder="border-emerald-300"
             badgeText="RECOMMENDED"
           />
 
@@ -53,8 +53,8 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={RouteIcon}
             active={layers.alternativeRoute}
             onToggle={() => onToggleLayer('alternativeRoute')}
-            colorClass="text-amber-400"
-            accentBorder="border-amber-500/40"
+            colorClass="text-amber-600"
+            accentBorder="border-amber-300"
             badgeText="CONVENTIONAL"
           />
 
@@ -64,29 +64,40 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={Building2}
             active={layers.stations}
             onToggle={() => onToggleLayer('stations')}
-            colorClass="text-blue-300"
+            colorClass="text-[#1E3A52]"
           />
         </div>
       </div>
 
-      {/* Group 2: Ice Hazards & Icebergs */}
+      {/* Group 2: Ice Hazards & Remote Sensing */}
       <div>
         <div className="flex items-center justify-between mb-1.5 px-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400/80 font-semibold flex items-center gap-1.5">
-            <TriangleAlert className="w-3 h-3 text-rose-400" />
-            Ice Hazards & Targets
+          <span className="text-[10px] font-mono uppercase tracking-wider text-rose-600 font-semibold flex items-center gap-1.5">
+            <TriangleAlert className="w-3 h-3 text-rose-500" />
+            Ice Hazards & Remote Sensing
           </span>
-          <span className="text-[9px] font-mono text-slate-400">SAR / RADAR</span>
+          <span className="text-[9px] font-mono text-[#68869E]">SAR / NASA GIBS</span>
         </div>
         <div className="space-y-1.5">
+          <LayerToggleItem
+            label="NASA GIBS Satellite"
+            description="Daily MODIS True Color 250m"
+            icon={Globe}
+            active={layers.nasaGibs}
+            onToggle={() => onToggleLayer('nasaGibs')}
+            colorClass="text-[#3385C6]"
+            accentBorder="border-[#66A3D3]"
+            badgeText="DAILY NASA"
+          />
+
           <LayerToggleItem
             label="Iceberg Locations"
             description="Tracked tabular & pinnacled bergs"
             icon={TriangleAlert}
             active={layers.icebergs}
             onToggle={() => onToggleLayer('icebergs')}
-            colorClass="text-rose-400"
-            accentBorder="border-rose-500/40"
+            colorClass="text-rose-500"
+            accentBorder="border-rose-300"
             badgeText="5 TRACKED"
           />
 
@@ -96,8 +107,8 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={ShieldAlert}
             active={layers.riskZones}
             onToggle={() => onToggleLayer('riskZones')}
-            colorClass="text-orange-400"
-            accentBorder="border-orange-500/40"
+            colorClass="text-amber-600"
+            accentBorder="border-amber-300"
           />
 
           <LayerToggleItem
@@ -106,7 +117,7 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={Layers}
             active={layers.seaIceConcentration}
             onToggle={() => onToggleLayer('seaIceConcentration')}
-            colorClass="text-sky-300"
+            colorClass="text-[#3385C6]"
             badgeText="SIC %"
           />
 
@@ -116,7 +127,7 @@ export default function LayerControls({ layers, onToggleLayer }) {
             icon={Binary}
             active={layers.icebergProbability}
             onToggle={() => onToggleLayer('icebergProbability')}
-            colorClass="text-purple-400"
+            colorClass="text-purple-600"
             isFutureLayer={true}
           />
         </div>

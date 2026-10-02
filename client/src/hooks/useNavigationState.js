@@ -11,6 +11,7 @@ export function useNavigationState() {
     riskZones: true,
     stations: true,
     seaIceConcentration: true,
+    nasaGibs: false,
     icebergProbability: false,
     temperatureLayer: false,
     weatherVectors: false,

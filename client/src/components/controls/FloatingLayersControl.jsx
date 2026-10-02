@@ -11,11 +11,12 @@ export default function FloatingLayersControl({
 
   const layerItems = [
     { num: '01', key: 'stations', label: 'STATIONS' },
-    { num: '02', key: 'seaIceConcentration', label: 'SEA ICE' },
-    { num: '03', key: 'icebergs', label: 'ICEBERGS' },
-    { num: '04', key: 'vessel', label: 'VESSEL' },
-    { num: '05', key: 'recommendedRoute', label: 'ROUTES' },
-    { num: '06', key: 'riskZones', label: 'RISK' }
+    { num: '02', key: 'nasaGibs', label: 'NASA GIBS' },
+    { num: '03', key: 'seaIceConcentration', label: 'SEA ICE' },
+    { num: '04', key: 'icebergs', label: 'ICEBERGS' },
+    { num: '05', key: 'vessel', label: 'VESSEL' },
+    { num: '06', key: 'recommendedRoute', label: 'ROUTES' },
+    { num: '07', key: 'riskZones', label: 'RISK' }
   ];
 
   const basemaps = [

@@ -69,6 +69,8 @@ export default function AntarcticMap({
   setSelectedType,
   selectedObject,
   navDestination,
+  selectedIceberg,
+  icebergDriftAnalysis,
   onSelectVessel,
   onSelectIceberg,
   onSelectStation,
@@ -180,14 +182,25 @@ export default function AntarcticMap({
         ))}
 
         {/* Iceberg Diamond Markers */}
-        {layers.icebergs && icebergs?.map((iceberg) => (
-          <IcebergMarker
-            key={iceberg.id}
-            iceberg={iceberg}
-            isSelected={selectedObject?.type === 'iceberg' && selectedObject.data.id === iceberg.id}
-            onSelect={onSelectIceberg}
-          />
-        ))}
+        {layers.icebergs && (() => {
+          const activeBergId = selectedIceberg?.id || (selectedObject?.type === 'iceberg' ? selectedObject.data?.id : null);
+          const hasActiveBerg = Boolean(activeBergId);
+
+          return icebergs?.map((iceberg) => {
+            const isSelected = iceberg.id === activeBergId;
+            const isSubdued = hasActiveBerg && !isSelected;
+            return (
+              <IcebergMarker
+                key={iceberg.id}
+                iceberg={iceberg}
+                isSelected={isSelected}
+                isSubdued={isSubdued}
+                driftProjection={isSelected ? icebergDriftAnalysis : null}
+                onSelect={onSelectIceberg}
+              />
+            );
+          });
+        })()}
 
         {/* Live AIS Fleet & Research Vessels */}
         {layers.vessel && (

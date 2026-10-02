@@ -5,12 +5,13 @@ import BottomSummary from '../components/layout/BottomSummary';
 import AntarcticMap from '../components/map/AntarcticMap';
 import LocationInfoPanel from '../components/panels/LocationInfoPanel';
 import NavWorkspacePanel from '../components/panels/NavigationPlanningPanel';
+import IcebergIntelligencePanel from '../components/panels/IcebergIntelligencePanel';
 import { useNavigationState } from '../hooks/useNavigationState';
 import { filterStations, calculateStationStats } from '../data/stations/stationUtils';
 
 /**
  * Spring transition for the layout panels.
- * Map shrinks to ~58% while the nav workspace slides in on the right.
+ * Map shrinks to ~58% while the workspace panel slides in on the right.
  */
 const LAYOUT_SPRING = { type: 'spring', stiffness: 260, damping: 34 };
 
@@ -48,6 +49,9 @@ export default function MapPage() {
   // Navigation planning state — when non-null, nav workspace is open
   const [navDestination, setNavDestination] = useState(null);
 
+  // Active iceberg drift analysis results for map vector projection
+  const [icebergDriftAnalysis, setIcebergDriftAnalysis] = useState(null);
+
   // Station filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('All');
@@ -67,6 +71,12 @@ export default function MapPage() {
 
   const stationStats = useMemo(() => calculateStationStats(stations), [stations]);
 
+  // Derived panel modes
+  const isNavMode = Boolean(navDestination);
+  const selectedIceberg = selectedObject?.type === 'iceberg' ? selectedObject.data : null;
+  const isIcebergMode = Boolean(selectedIceberg);
+  const isSplitLayout = isNavMode || isIcebergMode;
+
   /* ── handlers ── */
 
   const handleSelectRoute = (route) => {
@@ -78,6 +88,7 @@ export default function MapPage() {
   const handleSetDestination = async (station) => {
     setNavDestination(station);
     setSelectedObject(null);
+    setIcebergDriftAnalysis(null);
     if (vessel && station) {
       await planRouteForVessel(vessel, station.id, station.coordinates);
     }
@@ -120,10 +131,15 @@ export default function MapPage() {
     }
   };
 
-  /** Open iceberg analysis panel from within the nav workspace */
+  /** Open iceberg analysis workspace from within the nav workspace or map */
   const handleIcebergAnalysis = (iceberg) => {
-    setNavDestination(null); // temporarily leave nav mode
+    setNavDestination(null); // transition from nav mode to iceberg intelligence mode
+    setIcebergDriftAnalysis(null);
     selectIceberg(iceberg);
+    const coords = iceberg.coordinates || [iceberg.latitude, iceberg.longitude];
+    if (coords) {
+      zoomTo(coords, 6);
+    }
   };
 
   /** Route changed from within nav workspace */
@@ -134,6 +150,11 @@ export default function MapPage() {
 
   const handleCloseNavPlanning = () => {
     setNavDestination(null);
+  };
+
+  const handleCloseIcebergPlanning = () => {
+    setSelectedObject(null);
+    setIcebergDriftAnalysis(null);
   };
 
   const handleCloseInfoPanel = () => {
@@ -153,8 +174,6 @@ export default function MapPage() {
     );
   }
 
-  const isNavMode = Boolean(navDestination);
-
   return (
     <div className="h-screen w-screen flex flex-col bg-[#F4F8FB] text-[#1E3A52] font-sans overflow-hidden select-none">
       {/* ── TOP HEADER ── */}
@@ -166,7 +185,7 @@ export default function MapPage() {
         {/* LEFT: MAP PANE ─────────────────────────────────────────────────── */}
         <motion.div
           layout
-          animate={{ flex: isNavMode ? '0 0 58%' : '1 1 100%' }}
+          animate={{ flex: isSplitLayout ? '0 0 58%' : '1 1 100%' }}
           transition={LAYOUT_SPRING}
           className="relative min-h-0 overflow-hidden"
           style={{ minWidth: 0 }}
@@ -193,9 +212,11 @@ export default function MapPage() {
             setSelectedType={setSelectedType}
             selectedObject={selectedObject}
             navDestination={navDestination}
+            selectedIceberg={selectedIceberg}
+            icebergDriftAnalysis={icebergDriftAnalysis}
             activeRouteType={activeRouteType}
             onSelectVessel={selectVessel}
-            onSelectIceberg={selectIceberg}
+            onSelectIceberg={handleIcebergAnalysis}
             onSelectStation={selectStation}
             onSelectRoute={handleSelectRoute}
             onSelectCoordinate={selectCustomCoordinate}
@@ -205,9 +226,9 @@ export default function MapPage() {
             stats={stationStats}
           />
 
-          {/* LOCATION INFO PANEL — overlaid inside the map pane */}
+          {/* LOCATION INFO PANEL — overlaid inside map pane for non-iceberg entities (stations, probed coordinates, routes) */}
           <AnimatePresence>
-            {!isNavMode && selectedObject && (
+            {!isSplitLayout && selectedObject && selectedObject.type !== 'iceberg' && (
               <LocationInfoPanel
                 selectedObject={selectedObject}
                 onClose={handleCloseInfoPanel}
@@ -244,6 +265,27 @@ export default function MapPage() {
                 onChangeVessel={handleChangeVessel}
                 onChangeDestination={handleChangeDestination}
                 onStartNavigation={handleStartNavigation}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* RIGHT: ICEBERG INTELLIGENCE WORKSPACE ─────────────────────────── */}
+        <AnimatePresence>
+          {isIcebergMode && (
+            <motion.div
+              key="iceberg-workspace"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: '42%', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={LAYOUT_SPRING}
+              className="h-full overflow-hidden shrink-0"
+              style={{ minWidth: 0 }}
+            >
+              <IcebergIntelligencePanel
+                iceberg={selectedIceberg}
+                onClose={handleCloseIcebergPlanning}
+                onAnalysisComplete={(res) => setIcebergDriftAnalysis(res)}
               />
             </motion.div>
           )}

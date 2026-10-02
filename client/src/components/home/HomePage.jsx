@@ -260,10 +260,10 @@ export default function HomePage() {
         </motion.header>
 
         {/* ── Hero Editorial Typography Block ────────────── */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24 my-auto py-12">
+        <div className="relative z-10 flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24 my-auto py-10 max-w-7xl">
           {/* Coordinates & Status Header Tag */}
           <motion.div
-            className="mb-6 flex items-center gap-3"
+            className="mb-5 flex items-center gap-3 flex-wrap"
             initial={{ opacity: 0, x: -15 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -274,44 +274,37 @@ export default function HomePage() {
             </span>
           </motion.div>
 
-          {/* POLAR (Oversized Editorial Typography) */}
-          <div className="overflow-hidden">
-            <motion.div
-              className="hero-title text-[#0F2130]"
-              initial={{ y: '105%' }}
-              animate={{ y: 0 }}
-              transition={{ delay: 0.5, duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            >
-              POLAR
-            </motion.div>
-          </div>
+          {/* POLAR NAV AI Headline */}
+          <div className="space-y-0.5">
+            <div className="overflow-hidden">
+              <motion.div
+                className="hero-title text-[#0F2130]"
+                initial={{ y: '105%' }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              >
+                POLAR
+              </motion.div>
+            </div>
 
-          {/* NAV — Offset Right for High-End Editorial Composition */}
-          <div className="overflow-hidden flex items-baseline">
-            <motion.div
-              className="hero-title text-[#0F2130]"
-              style={{ marginLeft: 'clamp(2rem, 10vw, 14rem)' }}
-              initial={{ y: '105%' }}
-              animate={{ y: 0 }}
-              transition={{ delay: 0.65, duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            >
-              NAV
+            <div className="overflow-hidden flex items-baseline gap-3 md:gap-5 flex-wrap">
+              <motion.div
+                className="hero-title text-[#0F2130]"
+                initial={{ y: '105%' }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.65, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              >
+                NAV
+              </motion.div>
               <motion.span
-                className="inline-block text-[#3385C6] font-mono"
-                style={{
-                  fontSize: 'clamp(1.2rem, 3vw, 3.5rem)',
-                  fontWeight: 600,
-                  letterSpacing: '0.08em',
-                  marginLeft: '1.2rem',
-                  verticalAlign: 'super',
-                }}
+                className="inline-block text-[#3385C6] font-mono text-2xl md:text-4xl lg:text-5xl font-extrabold tracking-tight px-3 py-1 bg-[#E8F3FA] border border-[#CCE0F0] rounded-sm shadow-xs align-middle"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.9, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
                 AI
               </motion.span>
-            </motion.div>
+            </div>
           </div>
 
           {/* Subtitle & Scientific Summary */}
@@ -319,13 +312,30 @@ export default function HomePage() {
             className="mt-6 md:mt-8 max-w-2xl"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: 0.85, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="font-tech text-[#1E3A52] font-semibold uppercase text-xs md:text-sm tracking-[0.18em]">
+            <div className="font-tech text-[#1E3A52] font-semibold uppercase text-xs md:text-sm tracking-[0.16em]">
               Antarctic Marine Navigation & Ice Intelligence Platform
             </div>
             <div className="font-mono text-[#68869E] text-[11px] md:text-xs mt-1.5 tracking-[0.12em] uppercase">
               AI-ENABLED SEA-ICE &nbsp;·&nbsp; THERMODYNAMIC ICEBERG MELT &nbsp;·&nbsp; DYNAMIC POLAR ROUTING
+            </div>
+
+            {/* Quick Action CTAs */}
+            <div className="mt-8 flex items-center gap-4 flex-wrap">
+              <button
+                onClick={() => navigate('/map')}
+                className="px-6 py-3 bg-[#3385C6] hover:bg-[#246699] text-white font-mono text-xs uppercase tracking-[0.16em] font-bold rounded-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <span>Launch Polar GIS Map</span>
+                <span>→</span>
+              </button>
+              <button
+                onClick={() => document.getElementById('section-modules')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-5 py-3 border border-[#CCE0F0] bg-white/80 hover:bg-white text-[#1E3A52] font-mono text-xs uppercase tracking-[0.14em] font-semibold rounded-sm transition-all cursor-pointer"
+              >
+                Explore Systems
+              </button>
             </div>
           </motion.div>
         </div>

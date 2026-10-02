@@ -116,18 +116,18 @@
 
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(5rem, 18vw, 20rem);
+  font-size: clamp(3.2rem, 9.5vw, 7.8rem);
   font-weight: 800;
-  line-height: 0.88;
-  letter-spacing: -0.04em;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
   text-transform: uppercase;
 }
 
 .section-title {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 10vw, 12rem);
+  font-size: clamp(2.2rem, 6vw, 5.5rem);
   font-weight: 800;
-  line-height: 0.9;
+  line-height: 0.95;
   letter-spacing: -0.03em;
   text-transform: uppercase;
 }

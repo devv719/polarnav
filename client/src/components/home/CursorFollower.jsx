@@ -86,25 +86,25 @@ export default function CursorFollower() {
     };
   }, [isVisible, mouseX, mouseY]);
 
-  if (isTouchDevice) return null;
+  if (isTouchDevice || !isVisible) return null;
 
   // Ring styling calculations based on cursor state
-  let ringSize = 38;
-  let ringBorderColor = 'rgba(51, 133, 198, 0.45)'; // Polar Sky Blue
+  let ringSize = 32;
+  let ringBorderColor = 'rgba(51, 133, 198, 0.4)';
   let ringBg = 'rgba(51, 133, 198, 0.03)';
-  let dotSize = 6;
+  let dotSize = 5;
   let dotColor = '#3385C6';
 
   if (cursorState === 'link') {
-    ringSize = 52;
+    ringSize = 44;
     ringBorderColor = '#3385C6';
     ringBg = 'rgba(51, 133, 198, 0.08)';
-    dotSize = 5;
+    dotSize = 4;
   } else if (cursorState === 'title') {
-    ringSize = 68;
-    ringBorderColor = 'rgba(30, 58, 82, 0.4)';
-    ringBg = 'rgba(232, 243, 250, 0.35)';
-    dotSize = 7;
+    ringSize = 48;
+    ringBorderColor = 'rgba(30, 58, 82, 0.3)';
+    ringBg = 'rgba(232, 243, 250, 0.3)';
+    dotSize = 5;
     dotColor = '#1E3A52';
   }
 

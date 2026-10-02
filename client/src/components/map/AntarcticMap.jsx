@@ -26,11 +26,13 @@ function MapViewController({ center, zoom }) {
   }, [center, zoom, map]);
 
   useEffect(() => {
-    // Invalidate size to guarantee correct tile alignment after render
-    const timer = setTimeout(() => {
+    const container = map.getContainer();
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
       map.invalidateSize();
-    }, 150);
-    return () => clearTimeout(timer);
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
   }, [map]);
 
   return null;
@@ -51,6 +53,7 @@ export default function AntarcticMap({
   baseLayer = 'satellite',
   setBaseLayer,
   vessel,
+  vessels = [],
   icebergs,
   routes,
   riskZones,
@@ -186,13 +189,27 @@ export default function AntarcticMap({
           />
         ))}
 
-        {/* Research Vessel (ORV Sagar Nidhi) */}
-        {layers.vessel && vessel && (
-          <VesselMarker
-            vessel={vessel}
-            isSelected={selectedObject?.type === 'vessel'}
-            onSelect={onSelectVessel}
-          />
+        {/* Live AIS Fleet & Research Vessels */}
+        {layers.vessel && (
+          vessels && vessels.length > 0 ? (
+            vessels.map((v) => (
+              <VesselMarker
+                key={v.mmsi || v.id}
+                vessel={v}
+                isSelected={
+                  (selectedObject?.type === 'vessel' && (selectedObject.data?.mmsi === v.mmsi || selectedObject.data?.id === v.id)) ||
+                  (vessel && (vessel.mmsi === v.mmsi || vessel.id === v.id))
+                }
+                onSelect={onSelectVessel}
+              />
+            ))
+          ) : vessel ? (
+            <VesselMarker
+              vessel={vessel}
+              isSelected={selectedObject?.type === 'vessel'}
+              onSelect={onSelectVessel}
+            />
+          ) : null
         )}
 
         {/* Minimal Zoom & Overview Controls */}

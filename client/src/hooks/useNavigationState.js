@@ -21,6 +21,7 @@ export function useNavigationState() {
   const [baseLayer, setBaseLayer] = useState('satellite');
 
   // Loaded Data
+  const [vessels, setVessels] = useState([]);
   const [vessel, setVessel] = useState(null);
   const [icebergs, setIcebergs] = useState([]);
   const [routes, setRoutes] = useState({ recommended: null, alternative: null });
@@ -40,21 +41,26 @@ export function useNavigationState() {
     async function loadData() {
       setLoading(true);
       try {
-        const [vesselData, icebergData, routeData, zoneData, stationData] = await Promise.all([
-          navigationService.getVesselTelemetry(),
+        const [liveFleet, icebergData, routeData, zoneData, stationData] = await Promise.all([
+          navigationService.getLiveVessels(),
           navigationService.getIcebergDetections(),
           navigationService.getNavigationRoutes(),
           navigationService.getRiskZones(),
           navigationService.getAntarcticStations()
         ]);
 
-        setVessel(vesselData);
+        setVessels(liveFleet);
+        const primaryVessel = liveFleet[0] || null;
+        setVessel(primaryVessel);
         setIcebergs(icebergData);
         setRoutes(routeData);
         setRiskZones(zoneData);
         setStations(stationData);
 
-        // Default selection: none (panel only opens on user selection)
+        if (primaryVessel?.coordinates) {
+          setMapCenter(primaryVessel.coordinates);
+        }
+
         setSelectedObject(null);
       } catch (err) {
         console.error('Error loading PolarNav data:', err);
@@ -66,6 +72,27 @@ export function useNavigationState() {
     loadData();
   }, []);
 
+  // Periodic AIS live vessel polling (every 10s)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const updatedFleet = await navigationService.getLiveVessels();
+        if (updatedFleet && updatedFleet.length > 0) {
+          setVessels(updatedFleet);
+          setVessel(prev => {
+            if (!prev) return updatedFleet[0];
+            const matching = updatedFleet.find(v => v.mmsi === prev.mmsi || v.id === prev.id);
+            return matching || prev;
+          });
+        }
+      } catch (err) {
+        console.debug('AIS live poll status:', err);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleLayer = useCallback((layerKey) => {
     setLayers((prev) => ({
       ...prev,
@@ -74,11 +101,16 @@ export function useNavigationState() {
   }, []);
 
   const selectVessel = useCallback((vesselData) => {
+    setVessel(vesselData);
     setSelectedObject({
       type: 'vessel',
-      data: vesselData || vessel
+      data: vesselData
     });
-  }, [vessel]);
+    if (vesselData?.coordinates) {
+      setMapCenter(vesselData.coordinates);
+      setMapZoom(6);
+    }
+  }, []);
 
   const resetAntarcticOverview = useCallback(() => {
     setMapCenter([-68.5000, 72.0000]);
@@ -139,14 +171,35 @@ export function useNavigationState() {
     }
   }, []);
 
+  const planRouteForVessel = useCallback(async (vesselObj, destStationId, destCoords = null) => {
+    if (!vesselObj) return;
+    try {
+      const newRoutes = await navigationService.planTargetedRoute(
+        vesselObj.mmsi || vesselObj.id,
+        destStationId,
+        vesselObj.coordinates,
+        destCoords
+      );
+      if (newRoutes) {
+        setRoutes(newRoutes);
+      }
+      return newRoutes;
+    } catch (err) {
+      console.error('Error planning targeted route:', err);
+    }
+  }, []);
+
   return {
     layers,
     toggleLayer,
     baseLayer,
     setBaseLayer,
     vessel,
+    vessels,
+    setVessel,
     icebergs,
     routes,
+    setRoutes,
     riskZones,
     stations,
     loading,
@@ -163,6 +216,7 @@ export function useNavigationState() {
     setMapZoom,
     focusVessel,
     resetAntarcticOverview,
-    zoomTo
+    zoomTo,
+    planRouteForVessel
   };
 }

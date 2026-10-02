@@ -414,10 +414,10 @@ export default function LocationInfoPanel({
                 {onSetDestination && (
                   <button
                     onClick={() => onSetDestination(data)}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-[#F4F8FB] hover:bg-[#E8F3FA] text-[#1E3A52] border border-[#CCE0F0] rounded-sm text-xs font-mono uppercase tracking-wider font-semibold transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#0F2130] hover:bg-[#1E3A52] text-white rounded-sm text-xs font-mono uppercase tracking-wider font-bold transition-colors shadow-xs"
                   >
-                    <Navigation className="w-3 h-3 text-[#3385C6]" />
-                    Set Nav Target
+                    <Navigation className="w-3 h-3" />
+                    Set as Navigation Target
                   </button>
                 )}
               </div>

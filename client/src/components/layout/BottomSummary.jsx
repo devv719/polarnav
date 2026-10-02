@@ -1,10 +1,12 @@
 import React from 'react';
+import { Navigation, ArrowRight } from 'lucide-react';
 
 export default function BottomSummary({
   vessel,
   routes,
   selectedRouteType = 'recommended',
-  onSelectRoute
+  onSelectRoute,
+  navDestination
 }) {
   if (!vessel || !routes?.recommended) return null;
 
@@ -13,16 +15,31 @@ export default function BottomSummary({
   return (
     <footer className="h-[44px] bg-[#FFFFFF] border-t border-[#CCE0F0] px-6 flex items-center justify-between z-20 shrink-0 select-none font-mono text-xs text-[#68869E] shadow-sm">
       {/* Route Path Indicator */}
-      <div className="flex items-center gap-3 text-[#1E3A52]">
-        <span className="text-[10px] tracking-widest text-[#68869E] uppercase font-semibold">ROUTE {selectedRouteType === 'recommended' ? '01' : '02'}</span>
-        <span className="text-[#CCE0F0]">•</span>
-        <span className="font-bold tracking-wider text-[#0F2130]">{vessel.name}</span>
-        <span className="text-[#3385C6] text-xs font-bold">→</span>
-        <span className="text-[#1E3A52] tracking-wider font-semibold">{vessel.destination || 'BHARATI STATION'}</span>
+      <div className="flex items-center gap-3 text-[#1E3A52] min-w-0">
+        {navDestination ? (
+          <>
+            <span className="flex items-center gap-1.5 text-[#3385C6]">
+              <Navigation className="w-3 h-3" />
+              <span className="text-[10px] tracking-widest text-[#3385C6] uppercase font-semibold">NAV PLANNING</span>
+            </span>
+            <span className="text-[#CCE0F0]">•</span>
+            <span className="font-bold tracking-wider text-[#0F2130] truncate">{vessel.name}</span>
+            <ArrowRight className="w-3 h-3 text-[#3385C6] shrink-0" />
+            <span className="text-[#1E3A52] tracking-wider font-semibold truncate">{navDestination.name}</span>
+          </>
+        ) : (
+          <>
+            <span className="text-[10px] tracking-widest text-[#68869E] uppercase font-semibold shrink-0">ROUTE {selectedRouteType === 'recommended' ? '01' : '02'}</span>
+            <span className="text-[#CCE0F0]">•</span>
+            <span className="font-bold tracking-wider text-[#0F2130] truncate">{vessel.name}</span>
+            <span className="text-[#3385C6] text-xs font-bold shrink-0">→</span>
+            <span className="text-[#1E3A52] tracking-wider font-semibold truncate">{vessel.destination || 'BHARATI STATION'}</span>
+          </>
+        )}
       </div>
 
       {/* Summary Metrics */}
-      <div className="flex items-center gap-4 text-[11px]">
+      <div className="flex items-center gap-4 text-[11px] shrink-0">
         <span className="text-[#1E3A52] font-semibold">
           {activeRoute.totalDistanceNM} NM
         </span>

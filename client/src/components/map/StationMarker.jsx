@@ -2,7 +2,7 @@ import React from 'react';
 import { Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 
-export default function StationMarker({ station, isSelected, onSelect }) {
+export default function StationMarker({ station, isSelected, isNavTarget, onSelect }) {
   if (!station?.coordinates) return null;
 
   const isIndian = station.operatorPrimary === 'India';
@@ -10,21 +10,31 @@ export default function StationMarker({ station, isSelected, onSelect }) {
   const isStation = station.isResearchStation;
 
   // Scientific GIS symbology:
+  // Nav Target: Amber pulsing ring — distinct from regular selection
   // Year-Round Station: Solid core marker
   // Seasonal Station: Outlined ring marker
   // Secondary Facility (Camp/Refuge/Depot): Subtle smaller dot
   let markerHtml = '';
 
-  if (isStation) {
+  if (isNavTarget) {
+    // Navigation destination — visually prominent amber target marker
+    markerHtml = `
+      <div class="relative flex items-center justify-center cursor-pointer group" style="width: 32px; height: 32px;">
+        <div class="absolute w-6 h-6 rounded-sm border-2 border-amber-400 opacity-40 animate-ping"></div>
+        <div class="w-4 h-4 rounded-sm bg-amber-400 border-2 border-white shadow-lg flex items-center justify-center">
+          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+        </div>
+      </div>
+    `;
+  } else if (isStation) {
     if (isYearRound) {
-      // Solid marker
       markerHtml = `
         <div class="relative flex items-center justify-center cursor-pointer group" style="width: 24px; height: 24px;">
           <div class="w-3 h-3 rounded-sm ${
-            isSelected 
-              ? 'bg-[#00e5ff] ring-2 ring-white shadow-[0_0_8px_#00e5ff]' 
+            isSelected
+              ? 'bg-[#3385C6] ring-2 ring-white shadow-[0_0_8px_#3385C6]'
               : isIndian
-              ? 'bg-[#00e5ff] border border-white/80 shadow'
+              ? 'bg-[#3385C6] border border-white/80 shadow'
               : 'bg-[#F3F1EB] border border-black/40 shadow'
           } flex items-center justify-center transition-transform group-hover:scale-125">
             <div class="w-1 h-1 bg-[#050505] rounded-full"></div>
@@ -32,17 +42,16 @@ export default function StationMarker({ station, isSelected, onSelect }) {
         </div>
       `;
     } else {
-      // Seasonal outlined marker
       markerHtml = `
         <div class="relative flex items-center justify-center cursor-pointer group" style="width: 24px; height: 24px;">
           <div class="w-3 h-3 rounded-sm bg-[#080808] ${
-            isSelected 
-              ? 'border-2 border-[#00e5ff] ring-1 ring-white shadow-[0_0_8px_#00e5ff]' 
+            isSelected
+              ? 'border-2 border-[#3385C6] ring-1 ring-white shadow-[0_0_8px_#3385C6]'
               : isIndian
-              ? 'border-2 border-[#00e5ff]'
+              ? 'border-2 border-[#3385C6]'
               : 'border border-[#8E8C85]'
           } flex items-center justify-center transition-transform group-hover:scale-125">
-            <div class="w-1 h-1 ${isIndian ? 'bg-[#00e5ff]' : 'bg-[#8E8C85]'} rounded-full"></div>
+            <div class="w-1 h-1 ${isIndian ? 'bg-[#3385C6]' : 'bg-[#8E8C85]'} rounded-full"></div>
           </div>
         </div>
       `;
@@ -52,8 +61,8 @@ export default function StationMarker({ station, isSelected, onSelect }) {
     markerHtml = `
       <div class="relative flex items-center justify-center cursor-pointer group" style="width: 20px; height: 20px;">
         <div class="w-2 h-2 rotate-45 ${
-          isSelected 
-            ? 'bg-[#00e5ff] ring-2 ring-white' 
+          isSelected
+            ? 'bg-[#3385C6] ring-2 ring-white'
             : 'bg-[#080808] border border-[#8E8C85]/70'
         } transition-transform group-hover:scale-125"></div>
       </div>
@@ -63,8 +72,8 @@ export default function StationMarker({ station, isSelected, onSelect }) {
   const stationIcon = L.divIcon({
     className: 'scientific-station-marker',
     html: markerHtml,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
+    iconSize: isNavTarget ? [32, 32] : [24, 24],
+    iconAnchor: isNavTarget ? [16, 16] : [12, 12]
   });
 
   return (
@@ -77,15 +86,20 @@ export default function StationMarker({ station, isSelected, onSelect }) {
     >
       <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
         <div className="p-1 font-mono select-none text-center max-w-[200px]">
+          {isNavTarget && (
+            <div className="text-[9px] text-amber-400 uppercase tracking-widest font-bold mb-0.5">
+              NAV TARGET
+            </div>
+          )}
           <div className="font-semibold text-xs text-[#F3F1EB] truncate">
             {station.name}
           </div>
           <div className="text-[10px] text-[#8E8C85] mt-0.5 truncate">
             {station.operatorPrimary || station.country}
-            {station.type ? ` • ${station.type}` : ''}
+            {station.type ? ` · ${station.type}` : ''}
           </div>
           {station.seasonality && (
-            <div className="text-[9px] text-[#00e5ff] mt-0.5 uppercase tracking-wider">
+            <div className="text-[9px] text-[#38bdf8] mt-0.5 uppercase tracking-wider">
               {station.seasonality} {station.status ? `(${station.status})` : ''}
             </div>
           )}

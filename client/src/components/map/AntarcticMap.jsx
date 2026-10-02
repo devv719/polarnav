@@ -65,6 +65,7 @@ export default function AntarcticMap({
   selectedType = 'All',
   setSelectedType,
   selectedObject,
+  navDestination,
   onSelectVessel,
   onSelectIceberg,
   onSelectStation,
@@ -170,6 +171,7 @@ export default function AntarcticMap({
             key={station.id}
             station={station}
             isSelected={selectedObject?.type === 'station' && selectedObject.data.id === station.id}
+            isNavTarget={navDestination && navDestination.id === station.id}
             onSelect={onSelectStation}
           />
         ))}
